@@ -1,5 +1,5 @@
 '''
-pindu: a library for programming with the Dimensions API
+sidewall: a library for programming with the Dimensions API
 
 Authors
 -------
