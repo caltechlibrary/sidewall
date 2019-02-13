@@ -6,10 +6,10 @@
 # @website https://github.com/caltechlibrary/sidewall
 # =============================================================================
 
-__version__     = '0.0.0'
+__version__     = '0.0.1'
 __title__       = 'sidewall'
 __name__        = 'sidewall'
-__description__ = '''Python library for interacting with the Dimensions API.'''
+__description__ = '''Simple Dimensions Wrapper Client Library.'''
 __url__         = 'https://github.com/caltechlibrary/sidewall'
 __author__      = 'Michael Hucka <mhucka@caltech.edu>'
 __email__       = 'mhucka@caltech.edu'
