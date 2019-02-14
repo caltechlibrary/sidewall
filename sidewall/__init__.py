@@ -1,5 +1,5 @@
 '''
-sidewall: a library for programming with the Dimensions API
+sidewall: a library for interacting with the Dimensions API
 
 Authors
 -------
@@ -25,3 +25,4 @@ from .organization import Organization
 from .person       import Person
 from .publication  import Publication
 from .researcher   import Researcher
+from .debug        import set_debug
