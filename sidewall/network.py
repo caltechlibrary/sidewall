@@ -63,7 +63,7 @@ def network_available():
         r = urllib.request.urlopen("http://www.google.com")
         return True
     except Exception:
-        if __debug__: log('Could not connect to https://www.google.com')
+        if __debug__: log('could not connect to https://www.google.com')
         return False
     if r:
         r.close()
@@ -76,7 +76,12 @@ def timed_request(get_or_post, url, cache = True, **kwargs):
     # the argument list once (=> more maintainable).
     def url_request():
         http_method = requests.get if get_or_post == 'get' else requests.post
-        return http_method(url, timeout = 10, verify = False, **kwargs)
+        if __debug__: log('doing http {}{} on {}', get_or_post,
+                          ' (with caching)' if cache else '', url)
+        response = http_method(url, timeout = 10, verify = False, **kwargs)
+        if __debug__: log('received {} bytes{}', len(response.content),
+                          ' (possibly cached)' if cache else '')
+        return response
 
     failures = 0
     retries = 0
@@ -110,7 +115,7 @@ def timed_request(get_or_post, url, cache = True, **kwargs):
             # Try pause & continue, in case of transient network issues.
             if retries < _MAX_RETRIES:
                 retries += 1
-                if __debug__: log('Pausing because of consecutive failures')
+                if __debug__: log('pausing because of consecutive failures')
                 sleep(60 * retries)
                 failures = 0
                 retry = True
@@ -135,7 +140,6 @@ def net(get_or_post, url, polling = False, recursing = 0, **kwargs):
 
     req = None
     try:
-        if __debug__: log('HTTP {} {}', get_or_post, url)
         req = timed_request(get_or_post, url, **kwargs)
     except requests.exceptions.ConnectionError as ex:
         if recursing >= _MAX_RECURSIVE_CALLS:
