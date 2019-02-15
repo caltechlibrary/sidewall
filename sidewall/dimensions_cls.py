@@ -17,7 +17,6 @@ file "LICENSE" for more information.
 import getpass
 import json as jsonlib
 import keyring
-import requests_cache
 import sys
 
 if sys.platform.startswith('win'):
@@ -92,7 +91,7 @@ class Dimensions(Singleton):
 
         if req.status_code == 200:
             data = req.json()
-            if __debug__: log('received response: {}', data)
+            if __debug__: log('response: {}', data)
             return data
 
 
@@ -120,11 +119,11 @@ class Dimensions(Singleton):
             need_save = True
             cur_pswd = self._password('Password for Dimensions: ') or NONE
         if need_save and self._use_keyring:
-            if __debug__: log('Saving credentials to keyring')
+            if __debug__: log('saving credentials to keyring')
             keyring.set_password(_KEYRING, 'user', cur_user)
             keyring.set_password(_KEYRING, cur_user, cur_pswd)
         if __debug__:
-            if cur_user and cur_pswd: log('Credentials obtained')
+            if cur_user and cur_pswd: log('credentials obtained')
         return (None if cur_user == NONE else cur_user,
                 None if cur_pswd == NONE else cur_pswd)
 
