@@ -17,7 +17,7 @@ file "LICENSE" for more information.
 import getpass
 import json as jsonlib
 import keyring
-import requests
+import requests_cache
 import sys
 
 if sys.platform.startswith('win'):
@@ -71,7 +71,7 @@ class Dimensions(Singleton):
 
         self._dimensions_token = None
         creds = {'username': username, 'password': password}
-        req = timed_request('post', _AUTH_URL, json = creds)
+        req = timed_request('post', _AUTH_URL, cache = False, json = creds)
         data = req.json()
         if 'token' in data:
             self._dimensions_token = data['token']

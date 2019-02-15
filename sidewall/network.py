@@ -14,11 +14,13 @@ open-source software released under a 3-clause BSD license.  Please see the
 file "LICENSE" for more information.
 '''
 
+import datetime
 import http.client
 from   http.client import responses as http_responses
 from   os import path
 import requests
 from   requests.packages.urllib3.exceptions import InsecureRequestWarning
+import requests_cache
 from   time import sleep
 import shutil
 import ssl
@@ -30,6 +32,10 @@ import validators
 import warnings
 
 from .debug import log
+
+# Monkey-patch requests to cache responses transparently.
+requests_cache.install_cache('sidewall_cache', backend = 'sqlite',
+                             expire_after = datetime.timedelta(weeks = 1))
 
 
 # Constants.
@@ -63,10 +69,15 @@ def network_available():
         r.close()
 
 
-def timed_request(get_or_post, url, **kwargs):
+def timed_request(get_or_post, url, cache = True, **kwargs):
     # Wrap requests.get() or post() with a timeout.
-    # 'verify' means whether to perform HTTPS certificate verification.
-    http_method = requests.get if get_or_post == 'get' else requests.post
+
+    # Encapsulate the requests call and its arguments so that we only write
+    # the argument list once (=> more maintainable).
+    def url_request():
+        http_method = requests.get if get_or_post == 'get' else requests.post
+        return http_method(url, timeout = 10, verify = False, **kwargs)
+
     failures = 0
     retries = 0
     retry = True
@@ -75,13 +86,16 @@ def timed_request(get_or_post, url, **kwargs):
         retry = False
         try:
             with warnings.catch_warnings():
-                # When verify = True, the underlying urllib3 library used by
-                # the Python requests module will issue a warning about
-                # unverified HTTPS requests.  Since we don't care, the
-                # warnings are an annoyance.  See also this for a discussion:
+                # The underlying urllib3 library used by the Python requests
+                # module will issue a warning about missing SSL certificates.
+                # We don't care here.  See also this for a discussion:
                 # https://github.com/kennethreitz/requests/issues/2214
                 warnings.simplefilter("ignore", InsecureRequestWarning)
-                return http_method(url, timeout = 10, verify = False, **kwargs)
+                if cache:
+                    return url_request()
+                else:
+                    with requests_cache.disabled():
+                        return url_request()
         except Exception as ex:
             # Problem might be transient.  Don't quit right away.
             if __debug__: log('timed_request() exception: {}', str(ex))
