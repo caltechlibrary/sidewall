@@ -67,3 +67,4 @@ __pycache__
 
 build
 dist
+tests/sidewall_cache.sqlite
