@@ -172,7 +172,8 @@ def net(get_or_post, url, polling = False, recursing = 0, **kwargs):
     except Exception as ex:
         return (req, ex)
 
-    # Interpret the response.
+    # Interpret the response.  Note that the requests library handles code 301
+    # and 302 redirects automatically, so we don't need to do it here.
     code = req.status_code
     error = None
     if code in [404, 410] and not polling:
