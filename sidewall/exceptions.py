@@ -26,6 +26,9 @@ class ServiceFailure(Exception):
     '''Unrecoverable problem involving a remote service.'''
     pass
 
+class NoContent(Exception):
+    '''Server returned a code 401 or 404, indicating no content found.'''
+
 class RateLimitExceeded(Exception):
     '''The service flagged reports that its rate limits have been exceeded.'''
     pass
