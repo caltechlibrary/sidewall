@@ -28,6 +28,8 @@ class Author(Person):
 
     def _update_attributes(self, data):
         if __debug__: log('updating object {} using {}', id(self), data)
+        if not isinstance(data, dict):
+            raise InternalError('Data not in dict format')
         super()._update_attributes(data)
 
         set_objattr = object.__setattr__
