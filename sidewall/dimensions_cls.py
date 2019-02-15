@@ -41,6 +41,12 @@ _DSL_URL = 'https://app.dimensions.ai/api/dsl.json'
 _KEYRING = "org.caltech.library.sidewall"
 '''Prefix used to create a keyring entry for the user's credentials.'''
 
+_MAX_RETRIES = 3
+'''Number of times to retry a request when server says results are not ready.'''
+
+_RETRY_SLEEP = 2
+'''How many seconds to wait between retrying a query.'''
+
 
 # Classes
 # .............................................................................
@@ -78,24 +84,46 @@ class Dimensions(Singleton):
             raise AuthenticationFailure('Dimensions did not return a token')
 
 
-    def record_search(self, query, id):
+    def record_search(self, query, id, retry = 0):
         headers = {'Authorization': "JWT " + self._dimensions_token}
-        search_string = 'search ' + query.format(id)
+        search = 'search ' + query.format(id)
 
-        if __debug__: log('posting query "{}"', search_string)
-        (req, error) = net('post', _DSL_URL, data = search_string, headers = headers)
+        if __debug__: log('posting query "{}"', search)
+        (resp, error) = net('post', _DSL_URL, data = search, headers = headers)
 
-        # fixme
-        # - loop over responses looking for field value
-        # - issue limit & maybe multiple calls to keep looking
+        # Check for problems.
+        if isinstance(error, NoContent):
+            if __debug__: log('Server returned a "no content" code')
+            return {}
+        elif error:
+            raise error
 
-        if req.status_code == 200:
-            data = req.json()
+        # Return the results or deal with issues.
+        if resp.status_code == 202:
+            # Request was received by the server but not acted upon.
+            if retries < _MAX_RETRIES:
+                sleep(_RETRY_SLEEP)     # Sleep a short time and try again.
+                return self.record_search(query, id, retry + 1)
+            else:
+                raise ServiceFailure('Server returned code 202 multiple times')
+        elif 200 < resp.status_code <= 400:
+            # Not a code 200 or 202, not a redirect, but something's not right.
+            raise QueryError('Server rejected the query')
+        else:
+            data = resp.json()
             if __debug__: log('response: {}', data)
             return data
 
 
-    def search(self, query):
+    def query(self, query, max_results = None):
+        '''Issue the DSL 'query' to Dimensions and return a list of results.
+        Each item will be an object such as Researcher, Publication, etc.
+        The query string must end in one of the types recognized by Sidewall.
+        '''
+
+        # fixme
+        # - loop over responses looking for field value
+        # - issue limit & maybe multiple calls to keep looking
         pass
 
 
