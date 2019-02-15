@@ -14,7 +14,7 @@ open-source software released under a 3-clause BSD license.  Please see the
 file "LICENSE" for more information.
 '''
 
-from .core import DimensionsCore, dimensions_search
+from .core import DimensionsCore
 from .debug import log
 from .exceptions import *
 
