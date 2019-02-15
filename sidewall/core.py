@@ -16,7 +16,7 @@ file "LICENSE" for more information.
 
 import json as jsonlib
 
-from .dimensions import dimensions_search
+from .dimensions_cls import dimensions
 from .debug import log
 
 
@@ -32,9 +32,8 @@ from .debug import log
 class DimensionsCore(object):
     _attributes = []
 
-    def __init__(self, json, creds = None):
+    def __init__(self, json):
         self._json_data = json          # A dict.
-        self._creds = creds             # User credentials.
         self._searched = False          # If we already searched for more.
         self._hash = None
         try:
@@ -73,12 +72,11 @@ class DimensionsCore(object):
             raise AttributeError(attr)
         if not (objattr(self, attr) or objattr(self, '_searched')):
             if __debug__: log('"{}" not yet set', attr)
-            creds = objattr(self, '_creds')
             search_tmpl = objattr(self, '_search_tmpl')
-            if creds and search_tmpl:
+            if search_tmpl:
                 object.__setattr__(self, '_searched', True)
                 dim_id = objattr(self, 'id')
-                record_json = dimensions_search(search_tmpl, dim_id, creds)
+                record_json = dimensions.record_search(search_tmpl, dim_id)
                 fill_record = objattr(self, '_fill_record')
                 fill_record(record_json)
         return objattr(self, attr)
