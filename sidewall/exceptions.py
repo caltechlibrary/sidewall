@@ -31,12 +31,12 @@ class RateLimitExceeded(Exception):
     pass
 
 class InternalError(Exception):
-    '''Unrecoverable problem involving sidewall itself.'''
+    '''Unrecoverable problem involving Sidewall itself.'''
     pass
 
 class DataMismatch(Exception):
     '''Received unexpected result from Dimensions server. This probably means
-    the Dimensions API has changed recently, or it reflects a bug in sidewall.'''
+    the Dimensions API has changed recently, or it reflects a bug in Sidewall.'''
     pass
 
 class QueryError(Exception):

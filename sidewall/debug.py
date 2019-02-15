@@ -1,5 +1,5 @@
 '''
-debug.py: debugging aids for sidewall
+debug.py: debugging aids for Sidewall
 
 Authors
 -------

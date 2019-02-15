@@ -95,6 +95,10 @@ class Dimensions(Singleton):
             return data
 
 
+    def search(self, query):
+        pass
+
+
     def _credentials(self, user, pswd):
         '''Returns stored credentials for the given combination of host and user,
         or asks the user for new credentials if none are stored or reset is True.
