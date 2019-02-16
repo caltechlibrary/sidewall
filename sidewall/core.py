@@ -72,13 +72,20 @@ class DimensionsCore(object):
             raise AttributeError(attr)
         if not (objattr(self, attr) or objattr(self, '_searched')):
             if __debug__: log('"{}" not yet set', attr)
-            search_tmpl = objattr(self, '_search_tmpl')
-            if search_tmpl:
-                object.__setattr__(self, '_searched', True)
+            try:
+                search_tmpl = objattr(self, '_search_tmpl')
+            except:
+                if __debug__: log("no search template -- can't fill in values")
+                pass
+            else:
                 dim_id = objattr(self, 'id')
-                record_json = dimensions.record_search(search_tmpl, dim_id)
-                fill_record = objattr(self, '_fill_record')
-                fill_record(record_json)
+                if dim_id:
+                    object.__setattr__(self, '_searched', True)
+                    record_json = dimensions.record_search(search_tmpl, dim_id)
+                    fill_record = objattr(self, '_fill_record')
+                    fill_record(record_json)
+                else:
+                    if __debug__: log("no id value, so can't search")
         return objattr(self, attr)
 
 
