@@ -1,6 +1,17 @@
 '''
 publication.py: representation of a publication record
 
+This offers the various properties defined in the Dimensions documentation
+for publication objects, with one modification: this object class introduces
+a property named "authors" that is an alias for the "author_affiliations"
+property that Dimensions uses.  The reason for creating a field name that
+does not exist in Dimensions is that I found "author_affiliations" too
+confusing (because it's not just the affiliations -- it's the actual author
+list too) and, simultaneously, the lack of an "authors" field really
+unintuitive for a publication.  Still, creating two ways of accessing the
+same data is not ideal and may introduce code maintenance issues in the
+future.  Time will tell.
+
 Authors
 -------
 
@@ -12,6 +23,7 @@ Copyright
 Copyright (c) 2019 by the California Institute of Technology.  This code is
 open-source software released under a 3-clause BSD license.  Please see the
 file "LICENSE" for more information.
+
 '''
 
 from .author import Author
@@ -21,6 +33,8 @@ from .exceptions import *
 from .journal import Journal
 
 class Publication(DimensionsCore):
+    # Note: do NOT add "authors" to the following list.  The "authors" property
+    # is something we add, and is not present in Dimensions.
     _attributes = ['altmetric', 'author_affiliations', 'book_doi',
                    'book_series_title', 'book_title', 'date', 'date_inserted',
                    'doi', 'field_citation_ratio', 'id', 'issn', 'issue',
@@ -81,6 +95,18 @@ class Publication(DimensionsCore):
 
             for a in data['author_affiliations'][0]:
                 self.author_affiliations.append(Author(a))
+
+
+    @property
+    def authors(self):
+        '''Alias for the "author_affiliations" property on Publication.'''
+        return self.author_affiliations
+
+
+    @authors.setter
+    def authors(self, alist):
+        '''Alias for the "author_affiliations" property on Publication.'''
+        self.author_affiliations = alist
 
 
     def __repr__(self):
