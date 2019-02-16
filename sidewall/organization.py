@@ -52,17 +52,18 @@ class Organization(DimensionsCore):
             raise InternalError('Data not in dict format')
         super()._update_attributes(data)
 
-        set_objattr = object.__setattr__
-        set_objattr(self, 'acronym', data.get('acronym', ''))
-        set_objattr(self, 'city', data.get('city', ''))
-        set_objattr(self, 'city_id', data.get('city_id', ''))
-        set_objattr(self, 'country', data.get('country', ''))
-        set_objattr(self, 'country_code', data.get('country_code', ''))
-        set_objattr(self, 'country_name', data.get('country_name', ''))
-        set_objattr(self, 'id', data.get('id', ''))
-        set_objattr(self, 'name', data.get('name', ''))
-        set_objattr(self, 'state', data.get('state', ''))
-        set_objattr(self, 'state_code', data.get('state_code', ''))
+        set_objattr = lambda attr, value: object.__setattr__(self, attr, value)
+
+        set_objattr('acronym',      data.get('acronym', ''))
+        set_objattr('city',         data.get('city', ''))
+        set_objattr('city_id',      data.get('city_id', ''))
+        set_objattr('country',      data.get('country', ''))
+        set_objattr('country_code', data.get('country_code', ''))
+        set_objattr('country_name', data.get('country_name', ''))
+        set_objattr('id',           data.get('id', ''))
+        set_objattr('name',         data.get('name', ''))
+        set_objattr('state',        data.get('state', ''))
+        set_objattr('state_code',   data.get('state_code', ''))
 
 
     def _fill_record(self, json):

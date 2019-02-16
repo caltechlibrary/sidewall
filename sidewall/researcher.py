@@ -28,13 +28,14 @@ class Researcher(Person):
             raise InternalError('Data not in dict format')
         super()._update_attributes(data)
 
-        set_objattr = object.__setattr__
-        set_objattr(self, 'affiliations', [])
+        set_objattr = lambda attr, value: object.__setattr__(self, attr, value)
+        set_objattr('affiliations', [])
+
         if 'research_orgs' in data:
-            objattr = object.__getattribute__
-            aff = objattr(self, 'affiliations')
+            objattr = lambda attr: object.__getattribute__(self, attr)
+            affiliations = objattr('affiliations')
             for org_id in data['research_orgs']:
-                aff.append(Organization({'id': org_id}))
+                affiliations.append(Organization({'id': org_id}))
 
 
     def __repr__(self):

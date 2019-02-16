@@ -50,43 +50,47 @@ class DimensionsCore(object):
     def __getattr__(self, attr):
         # Be careful not to invoke "self.x" b/c it causes infinite recursion.
         # Make every attribute lookup use object.__getattribute__.
-        objattr = object.__getattribute__
-        if attr in objattr(self, '_attributes'):
-            existing_attrs = objattr(self, '__dict__')
+        objattr = lambda attr: object.__getattribute__(self, attr)
+        set_objattr = lambda attr, value: object.__setattr__(self, attr, value)
+
+        if attr in objattr('_attributes'):
+            existing_attrs = objattr('__dict__')
             if attr not in existing_attrs:
                 if __debug__: log('setting "{}" on object {}', attr, id(self))
-                json = objattr(self, '_json_data')
+                json = objattr('_json_data')
                 if attr in json:
                     value = self._json_data.get(attr)
-                    object.__setattr__(self, attr, value)
+                    set_objattr(attr, value)
                     return value
-        return objattr(self, attr)
+        return objattr(attr)
 
 
     def __getattribute__(self, attr):
         # Be careful not to invoke "self.x" b/c it causes infinite recursion.
         # Make every attribute lookup use object.__getattribute__.
+        objattr = lambda attr: object.__getattribute__(self, attr)
+        set_objattr = lambda attr, value: object.__setattr__(self, attr, value)
+
         if __debug__: log('looking up "{}" on object {}', attr, id(self))
-        objattr = object.__getattribute__
-        if not attr in objattr(self, '_attributes'):
+        if not attr in objattr('_attributes'):
             raise AttributeError(attr)
-        if not (objattr(self, attr) or objattr(self, '_searched')):
+        if not (objattr(attr) or objattr('_searched')):
             if __debug__: log('"{}" not yet set', attr)
             try:
-                search_tmpl = objattr(self, '_search_tmpl')
+                search_tmpl = objattr('_search_tmpl')
             except:
                 if __debug__: log("no search template -- can't fill in values")
                 pass
             else:
-                dim_id = objattr(self, 'id')
+                dim_id = objattr('id')
                 if dim_id:
-                    object.__setattr__(self, '_searched', True)
+                    object.__setattr__('_searched', True)
                     record_json = dimensions.record_search(search_tmpl, dim_id)
-                    fill_record = objattr(self, '_fill_record')
+                    fill_record = objattr('_fill_record')
                     fill_record(record_json)
                 else:
                     if __debug__: log("no id value, so can't search")
-        return objattr(self, attr)
+        return objattr(attr)
 
 
     def __repr__(self):
