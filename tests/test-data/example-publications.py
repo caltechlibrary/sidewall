@@ -41,9 +41,9 @@ headers = {
 #   Execute DSL query.
 resp = requests.post(
     'https://app.dimensions.ai/api/dsl.json',
-    data='search publications in title_abstract_only for "SBML" return publications',
+    data='search publications in title_abstract_only for "SBML" return publications[basics+extras]',
     headers=headers)
 
 # Write to file.
-with open('example-publication.json', 'w') as f:
+with open('example-publications.json', 'w') as f:
     json.dump(resp.json(), f)
