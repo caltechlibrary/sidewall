@@ -76,8 +76,11 @@ class Dimensions(Singleton):
 
         self._dimensions_token = None
         creds = {'username': username, 'password': password}
-        req = timed_request('post', _AUTH_URL, cache = False, json = creds)
-        data = req.json()
+        (resp, error) = net('post', _AUTH_URL, cache = False, json = creds)
+        if error:
+            raise error
+
+        data = resp.json()
         if 'token' in data:
             self._dimensions_token = data['token']
         else:
