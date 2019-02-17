@@ -17,6 +17,8 @@ file "LICENSE" for more information.
 import getpass
 import json as jsonlib
 import keyring
+import requests
+import string
 import sys
 
 if sys.platform.startswith('win'):
@@ -57,6 +59,8 @@ class Dimensions(Singleton):
         self._use_keyring      = True
         self._reset_keyring    = False
         self._dimensions_token = None
+        self._session          = requests.Session()
+        self._cache            = dict()
 
 
     def login(self, username = None, password = None,
@@ -76,7 +80,7 @@ class Dimensions(Singleton):
 
         self._dimensions_token = None
         creds = {'username': username, 'password': password}
-        (resp, error) = net('post', _AUTH_URL, cache = False, json = creds)
+        (resp, error) = net('post', _AUTH_URL, session = self._session, json = creds)
         if error:
             raise error
 
@@ -88,15 +92,21 @@ class Dimensions(Singleton):
 
 
     def record_search(self, query, id, retry = 0):
-        headers = {'Authorization': "JWT " + self._dimensions_token}
         search = 'search ' + query.format(id)
+        cache_key = self._cache_key(search)
+        if cache_key in self._cache:
+            if __debug__: log("returning cached value for '{}'", search)
+            return self._cache[cache_key]
 
-        if __debug__: log('posting query "{}"', search)
-        (resp, error) = net('post', _DSL_URL, data = search, headers = headers)
+        if __debug__: log("posting query '{}'", search)
+        headers = {'Authorization': "JWT " + self._dimensions_token}
+        (resp, error) = net('post', _DSL_URL, session = self._session,
+                            data = search, headers = headers)
 
         # Check for problems.
         if isinstance(error, NoContent):
             if __debug__: log('Server returned a "no content" code')
+            self._cache[cache_key] = {}
             return {}
         elif error:
             raise error
@@ -115,6 +125,7 @@ class Dimensions(Singleton):
         else:
             data = resp.json()
             if __debug__: log('response: {}', data)
+            self._cache[cache_key] = data
             return data
 
 
@@ -131,7 +142,7 @@ class Dimensions(Singleton):
 
 
     def _credentials(self, user, pswd):
-        '''Returns stored credentials for the given combination of host and user,
+        '''Return stored credentials for the given combination of host and user,
         or asks the user for new credentials if none are stored or reset is True.
         Empty user names and passwords are handled too.
         '''
@@ -171,6 +182,12 @@ class Dimensions(Singleton):
             sys.stdout.write(prompt)
             sys.stdout.flush()
             return sys.stdin.readline().rstrip()
+
+
+    _strip_whitespace = str.maketrans('', '', string.whitespace)
+
+    def _cache_key(self, query):
+       return query.translate(self._strip_whitespace)
 
 
 # Main entry point.
