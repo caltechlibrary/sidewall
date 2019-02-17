@@ -34,7 +34,7 @@ class DimensionsCore(object):
 
     def __init__(self, json):
         self._json_data = json          # A dict.
-        self._searched = False          # If we already searched for more.
+        self._searched = set()          # Attributes we have searched for.
         self._hash = None
         try:
             self._update_attributes(json)
@@ -74,11 +74,13 @@ class DimensionsCore(object):
         if __debug__: log('looking up "{}" on object {}', attr, id(self))
         if not attr in objattr('_attributes'):
             raise AttributeError(attr)
-        if not (objattr(attr) or objattr('_searched')):
-            if __debug__: log('"{}" not yet set', attr)
+        if not (objattr(attr) or attr in objattr('_searched')):
+            if __debug__: log('"{}" not yet set on object {}', attr, id(self))
             # Attribute has no value and we haven't tried searching for it.
             # Whether we can search or not, we set the flag that we tried.
-            set_objattr('_searched', True)
+            searched = objattr('_searched')
+            searched.add(attr)      # Warning: don't combine this w/ next line.
+            set_objattr('_searched', searched)
             try:
                 search_tmpl = objattr('_search_tmpl')
             except:
