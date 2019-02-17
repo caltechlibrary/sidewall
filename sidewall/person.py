@@ -66,11 +66,11 @@ class Person(DimensionsCore):
         set_objattr('first_name', data.get('first_name', ''))
         set_objattr('last_name',  data.get('last_name', ''))
         set_objattr('id',         data.get('id') or data.get('researcher_id') or '')
-        set_objattr('orcid',      data.get('orcid_id') or data.get('orcid') or '')
 
         # They use a list for researcher's orcid in some cases but not others.
         # Not clear if they ever associate more than one orcid w someone.
         # Currently we assume there's only 1 orcid.
+        set_objattr('orcid', data.get('orcid_id') or data.get('orcid') or '')
         orcid = objattr('orcid')
         if isinstance(orcid, list):
             if len(orcid) > 1:
