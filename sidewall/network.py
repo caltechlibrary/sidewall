@@ -124,13 +124,17 @@ def timed_request(get_or_post, url, cache = True, **kwargs):
                 raise error
 
 
-def net(get_or_post, url, polling = False, recursing = 0, **kwargs):
+def net(get_or_post, url, cache = True, polling = False, recursing = 0, **kwargs):
     '''Gets or posts the 'url' with optional keyword arguments provided.
     Returns a tuple of (response, exception), where the first element is
     the response from the get or post http call, and the second element is
     an exception object if an exception occurred.  If no exception occurred,
     the second element will be None.  This allows the caller to inspect the
     response even in cases where exceptions are raised.
+
+    If keyword 'cache' is True, requests will use a cache such that after the
+    first case, an identical request will use a cached value instead of going
+    over the net.
 
     If keyword 'polling' is True, certain statuses like 404 are ignored and
     the response is returned; otherwise, they are considered errors.
@@ -140,7 +144,7 @@ def net(get_or_post, url, polling = False, recursing = 0, **kwargs):
 
     req = None
     try:
-        req = timed_request(get_or_post, url, **kwargs)
+        req = timed_request(get_or_post, url, cache, **kwargs)
     except requests.exceptions.ConnectionError as ex:
         if recursing >= _MAX_RECURSIVE_CALLS:
             return (req, NetworkFailure(addurl('Too many connection errors')))
