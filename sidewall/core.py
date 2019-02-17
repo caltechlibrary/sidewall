@@ -76,6 +76,9 @@ class DimensionsCore(object):
             raise AttributeError(attr)
         if not (objattr(attr) or objattr('_searched')):
             if __debug__: log('"{}" not yet set', attr)
+            # Attribute has no value and we haven't tried searching for it.
+            # Whether we can search or not, we set the flag that we tried.
+            set_objattr('_searched', True)
             try:
                 search_tmpl = objattr('_search_tmpl')
             except:
@@ -84,10 +87,8 @@ class DimensionsCore(object):
             else:
                 dim_id = objattr('id')
                 if dim_id:
-                    object.__setattr__('_searched', True)
                     record_json = dimensions.record_search(search_tmpl, dim_id)
-                    fill_record = objattr('_fill_record')
-                    fill_record(record_json)
+                    objattr('_fill_record')(record_json)
                 else:
                     if __debug__: log("no id value, so can't search")
         return objattr(attr)
