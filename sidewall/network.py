@@ -20,7 +20,6 @@ from   http.client import responses as http_responses
 from   os import path
 import requests
 from   requests.packages.urllib3.exceptions import InsecureRequestWarning
-import requests_cache
 from   time import sleep
 import shutil
 import ssl
@@ -32,10 +31,6 @@ import validators
 import warnings
 
 from .debug import log
-
-# Monkey-patch requests to cache responses transparently.
-requests_cache.install_cache('sidewall_cache', backend = 'sqlite',
-                             expire_after = datetime.timedelta(weeks = 1))
 
 
 # Constants.
@@ -69,19 +64,12 @@ def network_available():
         r.close()
 
 
-def timed_request(get_or_post, url, cache = True, **kwargs):
-    # Wrap requests.get() or post() with a timeout.
-
-    # Encapsulate the requests call and its arguments so that we only write
-    # the argument list once (=> more maintainable).
-    def url_request():
-        http_method = requests.get if get_or_post == 'get' else requests.post
-        if __debug__: log('doing http {}{} on {}', get_or_post,
-                          ' (with caching)' if cache else '', url)
-        response = http_method(url, timeout = 10, verify = False, **kwargs)
-        if __debug__: log('received {} bytes{}', len(response.content),
-                          ' (possibly cached)' if cache else '')
-        return response
+def timed_request(get_or_post, url, session = None, timeout = 10, **kwargs):
+    '''Perform a network "get" or "post", handling timeouts and retries.
+    If "session" is not None, it is used as a requests.Session object.
+    "Timeout" is a timeout (in seconds) on the network requests get or post.
+    Other keyword arguments are passed to the network call.
+    '''
 
     failures = 0
     retries = 0
@@ -96,11 +84,14 @@ def timed_request(get_or_post, url, cache = True, **kwargs):
                 # We don't care here.  See also this for a discussion:
                 # https://github.com/kennethreitz/requests/issues/2214
                 warnings.simplefilter("ignore", InsecureRequestWarning)
-                if cache:
-                    return url_request()
+                if __debug__: log('doing http {} on {}', get_or_post, url)
+                if session:
+                    method = getattr(session, get_or_post)
                 else:
-                    with requests_cache.disabled():
-                        return url_request()
+                    method = requests.get if get_or_post == 'get' else requests.post
+                response = method(url, timeout = timeout, verify = False, **kwargs)
+                if __debug__: log('received {} bytes', len(response.content))
+                return response
         except Exception as ex:
             # Problem might be transient.  Don't quit right away.
             if __debug__: log('timed_request() exception: {}', str(ex))
@@ -124,7 +115,7 @@ def timed_request(get_or_post, url, cache = True, **kwargs):
                 raise error
 
 
-def net(get_or_post, url, cache = True, polling = False, recursing = 0, **kwargs):
+def net(get_or_post, url, session = None, polling = False, recursing = 0, **kwargs):
     '''Gets or posts the 'url' with optional keyword arguments provided.
     Returns a tuple of (response, exception), where the first element is
     the response from the get or post http call, and the second element is
@@ -132,9 +123,8 @@ def net(get_or_post, url, cache = True, polling = False, recursing = 0, **kwargs
     the second element will be None.  This allows the caller to inspect the
     response even in cases where exceptions are raised.
 
-    If keyword 'cache' is True, requests will use a cache such that after the
-    first case, an identical request will use a cached value instead of going
-    over the net.
+    If keyword 'session' is not None, it's assumed to be a requests session
+    object to use for the network call.
 
     If keyword 'polling' is True, certain statuses like 404 are ignored and
     the response is returned; otherwise, they are considered errors.
@@ -144,7 +134,7 @@ def net(get_or_post, url, cache = True, polling = False, recursing = 0, **kwargs
 
     req = None
     try:
-        req = timed_request(get_or_post, url, cache, **kwargs)
+        req = timed_request(get_or_post, url, session, **kwargs)
     except requests.exceptions.ConnectionError as ex:
         if recursing >= _MAX_RECURSIVE_CALLS:
             return (req, NetworkFailure(addurl('Too many connection errors')))
@@ -163,7 +153,7 @@ def net(get_or_post, url, cache = True, polling = False, recursing = 0, **kwargs
             if __debug__: log('net() got ConnectionResetError; will recurse')
             sleep(1)                    # Sleep a short time and try again.
             recursing += 1
-            return net(get_or_post, url, polling, recursing, **kwargs)
+            return net(get_or_post, url, polling, recursing, session, **kwargs)
         else:
             return (req, NetworkFailure(str(ex)))
     except requests.exceptions.ReadTimeout as ex:
