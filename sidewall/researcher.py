@@ -14,13 +14,26 @@ open-source software released under a 3-clause BSD license.  Please see the
 file "LICENSE" for more information.
 '''
 
+from .author import Author
 from .debug import log
-from .person import Person
-from .organization import Organization
 from .exceptions import *
+from .organization import Organization
+from .person import Person
+
 
 class Researcher(Person):
     _attributes = ['affiliations'] + Person._attributes
+
+    def __init__(self, data):
+        if isinstance(data, Author):
+            # We're given an author object, probably obtained from a pub search,
+            # and we want to fill it out to create a Researcher object.
+            if __debug__: log('converting Author {} to Researcher', id(data))
+            super().__init__(data.__dict__)
+        else:
+            # This is a standard initialization, not a case of upconverting.
+            super().__init__(data)
+
 
     def _update_attributes(self, data):
         if __debug__: log('updating object {} using {}', id(self), data)
