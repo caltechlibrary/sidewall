@@ -72,7 +72,11 @@ class Person(DimensionsCore):
         # Currently we assume there's only 1 orcid.
         set_objattr('orcid', data.get('orcid_id') or data.get('orcid') or '')
         orcid = objattr('orcid')
-        if isinstance(orcid, list):
+        if isinstance(orcid, str) and '[' in orcid:
+            # I suspect there's a bug in how I store test cases, but let's
+            # handle the case where a list was turned into a string.
+            set_objattr('orcid', objattr('orcid').strip("'[]"))
+        elif isinstance(orcid, list):
             if len(orcid) > 1:
                 raise DataMismatch('More than one ORCID id for {} {} ({})'
                                    .format(self.first_name, self.last_name, self.id))
