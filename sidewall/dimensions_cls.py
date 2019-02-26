@@ -14,9 +14,11 @@ open-source software released under a 3-clause BSD license.  Please see the
 file "LICENSE" for more information.
 '''
 
+from   collections import Iterable, namedtuple
 import getpass
 import json as jsonlib
 import keyring
+import re
 import requests
 import string
 import sys
@@ -29,6 +31,19 @@ from .debug import log
 from .exceptions import *
 from .network import network_available, timed_request, net
 from .singleton import Singleton
+from .publication import Publication
+from .researcher import Researcher
+from .organization import Organization
+
+
+# Type definitions
+# .............................................................................
+
+Handler = namedtuple('Handler', 'objclass elaboration')
+Handler.__doc__ = '''Convenience class for storing info about return types.
+  'objclass' is the object class for representing objects of this type
+  'elaboration' is a fieldset elaboration to be added to queries
+'''
 
 
 # Constants
@@ -43,11 +58,21 @@ _DSL_URL = 'https://app.dimensions.ai/api/dsl.json'
 _KEYRING = "org.caltech.library.sidewall"
 '''Prefix used to create a keyring entry for the user's credentials.'''
 
+_KNOWN_RESULT_TYPES = {
+    'publications' : Handler(Publication, '[basics+extras+book]'),
+    'research_orgs': Handler(Organization, ''),
+    'researchers'  : Handler(Researcher, ''),
+    }
+'''Known types of results that we can handle in a query.'''
+
 _MAX_RETRIES = 3
 '''Number of times to retry a request when server says results are not ready.'''
 
 _RETRY_SLEEP = 2
 '''How many seconds to wait between retrying a query.'''
+
+_FETCH_SIZE = 100
+'''How many results to get at a time from Dimensions.'''
 
 
 # Classes
@@ -130,15 +155,68 @@ class Dimensions(Singleton):
 
 
     def query(self, query, max_results = None):
-        '''Issue the DSL 'query' to Dimensions and return a list of results.
-        Each item will be an object such as Researcher, Publication, etc.
-        The query string must end in one of the types recognized by Sidewall.
+        '''Issue the DSL 'query' to Dimensions and return a tuple, where the
+        tuple has the form (total, iterator).  The first value of the tuple
+        is the total number of results, and the second value of the tuple is
+        an iterator to get the results.  Each item will be an object such as
+        Researcher, Publication, etc.  The query string must end in one of
+        the types recognized by Sidewall.
         '''
+        result_type = self._result_type(query)
+        if not result_type:
+            txt = 'Unsupported result type -- can only handle "{}"'
+            raise QueryError(txt.format('", "'.join(_KNOWN_RESULT_TYPES) + '.'))
 
-        # fixme
-        # - loop over responses looking for field value
-        # - issue limit & maybe multiple calls to keep looking
-        pass
+        # Prepare the first query to get the first set of results.
+        if max_results and max_results < _FETCH_SIZE:
+            fetch_size = max_results
+        else:
+            fetch_size = _FETCH_SIZE
+        base_query = self._expanded_query(query)
+        first_query = base_query + ' limit ' + str(fetch_size)
+
+        # Need run the first query to get the total_count.
+        data = self._post(first_query)
+        if '_stats' not in data:
+            raise DataMismatch('Data from Dimensions not in expected form')
+        if 'total_count' not in data['_stats']:
+            raise DataMismatch('Data from Dimensions missing total count')
+        total = data['_stats']['total_count']
+        if total == 0:
+            return []
+        if result_type not in data:
+            raise DataMismatch('Data from Dimensions does not have expected result type')
+        if len(data[result_type]) == 0:
+            raise DataMismatch('Data inconsistency in results from Dimensions')
+
+        return (total, self._iterator(base_query, data, result_type, fetch_size, total))
+
+
+    def _post(self, query):
+        '''Post the 'query' to the server and return the result as a dict.'''
+        if __debug__: log("posting query to server: '{}'", query)
+        headers = {'Authorization': "JWT " + self._dimensions_token}
+        (resp, error) = net('post', _DSL_URL, session = self._session,
+                            data = query, headers = headers)
+        if isinstance(error, NoContent):
+            if __debug__: log('Server returned a "no content" code')
+            return []
+        elif error:
+            raise error
+        else:
+            return resp.json()
+
+
+    def _iterator(self, base_query, initial_data, result_type, fetch_size, total):
+        skip = 0
+        data = initial_data
+        obj  = _KNOWN_RESULT_TYPES[result_type].objclass
+        while skip < total:
+            for record in data[result_type]:
+                yield obj(record)
+            skip += fetch_size
+            query = base_query + ' limit ' + str(fetch_size) + ' skip ' + str(skip)
+            data = self._post(query)
 
 
     def _credentials(self, user, pswd):
@@ -188,6 +266,21 @@ class Dimensions(Singleton):
 
     def _cache_key(self, query):
        return query.translate(self._strip_whitespace)
+
+
+    def _result_type(self, query):
+        for typename in _KNOWN_RESULT_TYPES.keys():
+            if re.search(r'return\s*' + typename, query):
+                return typename
+        return None
+
+
+    def _expanded_query(self, query):
+        for typename, data in _KNOWN_RESULT_TYPES.items():
+            stmt = r'return\s*' + typename
+            if re.search(stmt, query):
+                return re.sub(stmt, 'return ' + typename + data.elaboration, query)
+        return query
 
 
 # Main entry point.
