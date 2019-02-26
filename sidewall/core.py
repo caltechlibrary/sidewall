@@ -16,7 +16,6 @@ file "LICENSE" for more information.
 
 import json as jsonlib
 
-from .dimensions_cls import dimensions
 from .debug import log
 
 
