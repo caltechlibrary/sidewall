@@ -116,7 +116,7 @@ class Dimensions(Singleton):
             raise AuthenticationFailure('Dimensions did not return a token')
 
 
-    def record_search(self, query, id, retry = 0):
+    def record_search(self, query, id, retry = 1):
         search = 'search ' + query.format(id)
         cache_key = self._cache_key(search)
         if cache_key in self._cache:
@@ -130,7 +130,7 @@ class Dimensions(Singleton):
 
         # Check for problems.
         if isinstance(error, NoContent):
-            if __debug__: log('Server returned a "no content" code')
+            if __debug__: log('server returned a "no content" code')
             self._cache[cache_key] = {}
             return {}
         elif error:
@@ -139,7 +139,8 @@ class Dimensions(Singleton):
         # Return the results or deal with issues.
         if resp.status_code == 202:
             # Request was received by the server but not acted upon.
-            if retries < _MAX_RETRIES:
+            if retry <= _MAX_RETRIES:
+                if __debug__: log('got code 202 -- pausing & retrying')
                 sleep(_RETRY_SLEEP)     # Sleep a short time and try again.
                 return self.record_search(query, id, retry + 1)
             else:
@@ -192,14 +193,14 @@ class Dimensions(Singleton):
         return (total, self._iterator(base_query, data, result_type, fetch_size, total))
 
 
-    def _post(self, query):
+    def _post(self, query, retry = 1):
         '''Post the 'query' to the server and return the result as a dict.'''
         if __debug__: log("posting query to server: '{}'", query)
         headers = {'Authorization': "JWT " + self._dimensions_token}
         (resp, error) = net('post', _DSL_URL, session = self._session,
                             data = query, headers = headers)
         if isinstance(error, NoContent):
-            if __debug__: log('Server returned a "no content" code')
+            if __debug__: log('server returned a "no content" code')
             return []
         elif error:
             raise error
@@ -229,7 +230,7 @@ class Dimensions(Singleton):
         if self._use_keyring and not self._reset_keyring:
             # This hack stores the user name as the "password" for a fake user 'user'
             if __debug__:
-                if not (user or pswd): log('Trying keyring for user credentials')
+                if not (user or pswd): log('trying keyring for user credentials')
             cur_user = user or keyring.get_password(_KEYRING, 'user')
             if user or (cur_user and cur_user != NONE):
                 cur_pswd = pswd or keyring.get_password(_KEYRING, user or cur_user)

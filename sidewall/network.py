@@ -31,6 +31,7 @@ import validators
 import warnings
 
 from .debug import log
+from .ratelimit import RateLimit, rate_limit
 
 
 # Constants.
@@ -46,6 +47,9 @@ _MAX_FAILURES = 5
 _MAX_RETRIES = 5
 '''Maximum number of times we back off and try again.  This also affects the
 maximum wait time that will be reached after repeated retries.'''
+
+_DIMENSIONS_RATE_LIMIT = RateLimit(30, 1)
+'''Rate limit imposed by Dimensions API service.'''
 
 
 # Main functions.
@@ -64,13 +68,13 @@ def network_available():
         r.close()
 
 
+@rate_limit(_DIMENSIONS_RATE_LIMIT)
 def timed_request(get_or_post, url, session = None, timeout = 10, **kwargs):
     '''Perform a network "get" or "post", handling timeouts and retries.
     If "session" is not None, it is used as a requests.Session object.
     "Timeout" is a timeout (in seconds) on the network requests get or post.
     Other keyword arguments are passed to the network call.
     '''
-
     failures = 0
     retries = 0
     retry = True
