@@ -33,6 +33,8 @@ Michael Hucka <mhucka@caltech.edu> -- Caltech Library
 import functools
 import time
 
+from .debug import log
+
 
 # Classes.
 # .............................................................................
@@ -50,14 +52,14 @@ class RateLimit:
     def __init__(self, max_calls, time_limit):
         self.max_calls = max_calls
         self.time_limit = time_limit
-        self.coin = max_calls
+        self.token = max_calls
         self.time = time.perf_counter()
 
 
-    def getCoin(self):
-        if self.coin <= 0 and not self.restock():
+    def get_token(self):
+        if self.token <= 0 and not self.restock():
             return False
-        self.coin -= 1
+        self.token -= 1
         return True
 
 
@@ -65,7 +67,7 @@ class RateLimit:
         now = time.perf_counter()
         if (now - self.time) < self.time_limit:
             return False
-        self.coin = self.max_calls
+        self.token = self.max_calls
         self.time = now
         return True
 
@@ -82,7 +84,7 @@ def rate_limit(obj = None, *, max_calls = 30, time_limit = 1):
     def limit_decorator(func):
         @functools.wraps(func)
         def limit_wrapper(*args, **kwargs):
-            if obj.getCoin():
+            if obj.get_token():
                 return func(*args, **kwargs)
             return 'limit reached, please wait'
         return limit_wrapper
