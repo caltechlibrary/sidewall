@@ -156,8 +156,7 @@ def net(get_or_post, url, session = None, polling = False, recursing = 0, **kwar
               and arg0.args and isinstance(args0.args[1], ConnectionResetError)):
             if __debug__: log('net() got ConnectionResetError; will recurse')
             sleep(1)                    # Sleep a short time and try again.
-            recursing += 1
-            return net(get_or_post, url, polling, recursing, session, **kwargs)
+            return net(get_or_post, url, polling, recursing + 1, session, **kwargs)
         else:
             return (req, NetworkFailure(str(ex)))
     except requests.exceptions.ReadTimeout as ex:
