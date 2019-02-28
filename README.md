@@ -14,7 +14,7 @@ _Sidewall_ is a Python library for interacting with the [Dimensions](https://app
 ☀ Introduction
 -----------------------------
 
-Dimensions offers a networked API and search language (the [DSL](https://docs.dimensions.ai/dsl/language.html)).  However, there is as yet no object-oriented API library for Python.  Interacting with the DSL currently requires sending a search string to the Dimensions server, then interpreting the JSON results and handling various issues such as iterating to obtain more than 1000 values (which requires the use of multiple queries), staying within API rate limits, and more.  _Sidewall_ is an effort to create a higher-level interface for working more conveniently with the Dimensions DSL and network API.  Features of Sidewall include:
+[Dimensions](https://app.dimensions.ai) offers a networked API and search language (the [DSL](https://docs.dimensions.ai/dsl/language.html)).  However, there is as yet no object-oriented API library for Python.  Interacting with the DSL currently requires sending a search string to the Dimensions server, then interpreting the JSON results and handling various issues such as iterating to obtain more than 1000 values (which requires the use of multiple queries), staying within API rate limits, and more.  _Sidewall_ provides a higher-level interface for working more conveniently with the Dimensions DSL and network API.  Features of Sidewall include:
 
 * object classes defined for different Dimensions data entities
 * object attribute values filled in automatically behind the scenes
@@ -47,7 +47,7 @@ Sidewall is meant to be used from other programs; it does not provide a standalo
 
 ### Basic setup and use
 
-As discussed in the next section, Sidewall defines object classes such as `Researcher`, `Publication`, and a few others to represent the different types of records returned as the results of a Dimensions search query.  To make queries, import the Sidewall package and the symbol `dimensions`:
+To use Sidewall, import the package and the symbol `dimensions` in your Python code:
 
 ```python
 import sidewall
@@ -66,7 +66,7 @@ To run queries, you will need first to have an [account with Dimensions](https:/
 dimensions.login(username = 'somelogin', password = 'somepassword')
 ```
 
-However, a more secure and more convenient way is to invoke the `login()` method without any arguments.
+However, a more secure and more convenient way is to invoke the `login()` method without any arguments:
 
 ```python
 dimensions.login()
@@ -83,9 +83,9 @@ Sidewall defines a method, `query()`, which you can use to run a search in Dimen
 (total, records) = dimensions.query('search publications for "SBML" return publications')
 ```
 
-The form of the search query string that Sidewall can use is limited in certain ways described shortly.  The `query()` method returns multiple values: an integer representing the total number of results returned by the query, and the results themselves.  The latter is in the form of a Python generator so that you iterate over the results or do other operations like a typical Python data generator.
+The form of the search query string that Sidewall can use is limited in ways described shortly.  The `query()` method returns multiple values: an integer representing the total number of results returned by the query, and the results themselves.  The latter is in the form of a Python generator so that you iterate over the results or do other operations like a typical Python data generator.
 
-The objects returned by the generator will be Sidewall objects of the kind discussed in the section below on [Data mappings]().  The type will correspond to the type of record expressed in the tail end of the query handed to `query()`.  For example, a query that ends in `return publications` will produce Sidewall `Publications` objects; a query that ends in `return researchers` will produce Sidewall `Researcher` objects; and so on.
+The objects returned by the generator will be Sidewall objects of the kind discussed in the section below on [Data mappings]().  The specific classes of objects returned will correspond to the type of record expressed in the tail end of the query handed to `query()`.  For example, a query that ends in `return publications` will produce Sidewall `Publications` objects; a query that ends in `return researchers` will produce Sidewall `Researcher` objects; and so on.
 
 Sidewall currently puts the following limitations on the form of the query search string:
 * it must begin with `search`
@@ -109,8 +109,10 @@ for r in records:
 ```
 
 
-
 ### Data mappings
+
+Sidewall defines object classes such as `Researcher`, `Publication`, and a few others to represent the different types of records returned as the results of a Dimensions search query.
+
 
 **_Person_**
 
