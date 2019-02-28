@@ -1,7 +1,7 @@
-Sidewall
+Sidewall<img width="25%" align="right" src=".graphics/tire-sidewall-wikipedia.svg">
 =============
 
-_Sidewall_ is a Python library for interacting with the [Dimensions](https://app.dimensions.ai) search API.
+_Sidewall_ is a Python library for interacting with the [Dimensions](https://app.dimensions.ai) search API.  It defines object classes for different Dimensions data types, fetches data incrementally, copes with rate limits, and more.  "Sidewall" is a loose acronym for _**Si**mple **D**im**e**nsions **w**r**a**pper c**l**ient **l**ibrary_.
 
 *Authors*:      [Michael Hucka](http://github.com/mhucka)<br>
 *Repository*:   [https://github.com/caltechlibrary/sidewall](https://github.com/caltechlibrary/sidewall)<br>
@@ -10,9 +10,12 @@ _Sidewall_ is a Python library for interacting with the [Dimensions](https://app
 ☀ Introduction
 -----------------------------
 
-Dimensions offers a networked API and search language (the [DSL](https://docs.dimensions.ai/dsl/language.html)).  However, there is as yet no object-oriented API library for Python.  Interacting with the DSL currently requires writing strings and sending them to the Dimensions server, a process that is inconvenient for Python users.  _Sidewall_ is an effort to create a higher level interface for working with the Dimensions DSL and network API.  It wraps network calls and provides Python objects that can be used in programs to interact with Dimensions.
+Dimensions offers a networked API and search language (the [DSL](https://docs.dimensions.ai/dsl/language.html)).  However, there is as yet no object-oriented API library for Python.  Interacting with the DSL currently requires writing strings and sending them to the Dimensions server, then manually processing returned JSON output.  The overall process is inconvenient for Python programmers.  _Sidewall_ is an effort to create a higher-level interface for working with the Dimensions DSL and network API.  It wraps network calls and provides Python objects that can be used in programs to interact with Dimensions.  Features of Sidewall include:
 
-"Sidewall" is a loose acronym for _**Si**mple **D**im**e**nsions **w**r**a**pper c**l**ient **l**ibrary_.
+* object classes defined for different Dimensions data entities
+* object attribute values filled in automatically behind the scenes
+* lists returned as efficient generators that fetch data over the net as needed
+* automatic throttling to keep within API rate limits
 
 
 ✺ Installation instructions
@@ -91,6 +94,11 @@ The following table describes the fields and how they relate to values returned 
 
 If you find an issue, please submit it in [the GitHub issue tracker](https://github.com/caltechlibrary/sidewall/issues) for this repository.
 
+
+☺︎ Acknowledgments
+-----------------------
+
+The [vector artwork](https://commons.wikimedia.org/wiki/File:Tire_code_-_en.svg) of a car tire used as a logo for this repository was created by [Flanker](https://commons.wikimedia.org/wiki/User:F_l_a_n_k_e_r).  It is licensed under the Creative Commons [Attribution 3.0 Unported](https://creativecommons.org/licenses/by/3.0/deed.en) license.
 
 ☮︎ Copyright and license
 ---------------------
