@@ -1,36 +1,42 @@
-Sidewall<img width="25%" align="right" src=".graphics/tire-sidewall-wikipedia.svg">
+Sidewall<img width="22%" align="right" src=".graphics/tire-sidewall-wikipedia.svg">
 =============
 
-_Sidewall_ is a Python library for interacting with the [Dimensions](https://app.dimensions.ai) search API.  It defines object classes for different Dimensions data types, fetches data incrementally, copes with rate limits, and more.  "Sidewall" is a loose acronym for _**Si**mple **D**im**e**nsions **w**r**a**pper c**l**ient **l**ibrary_.
+_Sidewall_ is a Python library for interacting with the [Dimensions](https://app.dimensions.ai) search API.  It defines object classes for various Dimensions data types, fetches data incrementally, copes with rate limits, and more, to help working with Dimensions more natural for Python programmers.
 
 *Authors*:      [Michael Hucka](http://github.com/mhucka)<br>
 *Repository*:   [https://github.com/caltechlibrary/sidewall](https://github.com/caltechlibrary/sidewall)<br>
 *License*:      BSD/MIT derivative &ndash; see the [LICENSE](LICENSE) file for more information
 
+[![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg?style=flat-square)](https://choosealicense.com/licenses/bsd-3-clause)
+[![Python](https://img.shields.io/badge/Python-3.5+-brightgreen.svg?style=flat-square)](http://shields.io)
+[![Latest version](https://img.shields.io/badge/Latest_version-0.0.1-b44e88.svg?style=flat-square)](http://shields.io)
+
 ☀ Introduction
 -----------------------------
 
-Dimensions offers a networked API and search language (the [DSL](https://docs.dimensions.ai/dsl/language.html)).  However, there is as yet no object-oriented API library for Python.  Interacting with the DSL currently requires writing strings and sending them to the Dimensions server, then manually processing returned JSON output.  The overall process is inconvenient for Python programmers.  _Sidewall_ is an effort to create a higher-level interface for working with the Dimensions DSL and network API.  It wraps network calls and provides Python objects that can be used in programs to interact with Dimensions.  Features of Sidewall include:
+Dimensions offers a networked API and search language (the [DSL](https://docs.dimensions.ai/dsl/language.html)).  However, there is as yet no object-oriented API library for Python.  Interacting with the DSL currently requires sending a search string to the Dimensions server, then interpreting the JSON results and handling various issues such as iterating to obtain more than 1000 values (which requires the use of multiple queries), staying within API rate limits, and more.  _Sidewall_ is an effort to create a higher-level interface for working more conveniently with the Dimensions DSL and network API.  Features of Sidewall include:
 
 * object classes defined for different Dimensions data entities
 * object attribute values filled in automatically behind the scenes
 * lists returned as efficient generators that fetch data over the net as needed
+* automatic caching of search results for speed and efficiency
 * automatic throttling to keep within API rate limits
 
+"Sidewall" is a loose acronym for _**Si**mple **D**im**e**nsions **w**r**a**pper c**l**ient **l**ibrary_.
 
 ✺ Installation instructions
 ---------------------------
 
 The following is probably the simplest and most direct way to install this software on your computer:
 ```sh
-sudo pip3 install git+https://github.com/caltechlibrary/sidewall.git
+sudo python3 -m pip install git+https://github.com/caltechlibrary/sidewall.git --upgrade
 ```
 
 Alternatively, you can clone this GitHub repository and then run `setup.py`:
 ```sh
 git clone https://github.com/caltechlibrary/sidewall.git
 cd sidewall
-sudo python3 -m pip install .
+sudo python3 -m pip install . --upgrade
 ```
 
 ▶︎ Basic operation
