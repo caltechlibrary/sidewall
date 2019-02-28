@@ -96,7 +96,7 @@ class Publication(DimensionsCore):
                 raise DataMismatch('Affiliations list holds more than one list')
 
             for a in data['author_affiliations'][0]:
-                self.author_affiliations.append(Author(a))
+                self.author_affiliations.append(Author(a, self))
 
 
     @property

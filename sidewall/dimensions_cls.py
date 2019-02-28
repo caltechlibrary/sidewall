@@ -117,6 +117,7 @@ class Dimensions(Singleton):
 
 
     def record_search(self, query, id, retry = 1):
+        if __debug__: log('initiating record search involving {}'.format(id))
         search = 'search ' + query.format(id)
         cache_key = self._cache_key(search)
         if cache_key in self._cache:
@@ -214,7 +215,7 @@ class Dimensions(Singleton):
         obj  = _KNOWN_RESULT_TYPES[result_type].objclass
         while skip < total:
             for record in data[result_type]:
-                yield obj(record)
+                yield obj(record, creator = self)
             skip += fetch_size
             query = base_query + ' limit ' + str(fetch_size) + ' skip ' + str(skip)
             data = self._post(query)

@@ -39,7 +39,7 @@ class Author(Person):
             objattr = lambda attr: object.__getattribute__(self, attr)
             affiliations = objattr('affiliations')
             for org in data['affiliations']:
-                affiliations.append(Organization(org))
+                affiliations.append(Organization(org, self))
 
 
     def __repr__(self):
