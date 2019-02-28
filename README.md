@@ -39,8 +39,76 @@ cd sidewall
 sudo python3 -m pip install . --upgrade
 ```
 
-▶︎ Basic operation
-------------------
+▶︎ Using Sidewall
+----------------
+
+Sidewall is meant to be used from other programs; it does not provide a standalone command-line interface or graphical user interface.  At this time, Sidewall only supports certain kinds of Dimensions queries as discussed below.
+
+
+### Basic setup and use
+
+As discussed in the next section, Sidewall defines object classes such as `Researcher`, `Publication`, and a few others to represent the different types of records returned as the results of a Dimensions search query.  To make queries, import the Sidewall package and the symbol `dimensions`:
+
+```python
+import sidewall
+from sidewall import dimensions
+```
+
+In case of problems, it may be useful to turn on debugging in Sidewall to see everything that is happening behind the scenes.  You can do that by using `set_debug()` after importing Sidewall:
+
+```python
+sidewall.set_debug(True)
+```
+
+To run queries, you will need first to have an [account with Dimensions](https://plus.dimensions.ai/support/solutions/articles/23000013103-how-can-i-get-an-individual-login-for-dimensions-and-what-can-i-do-with-this-).  There are multiple ways of supplying user credentials to Sidewall.  The simplest and most direct is to supply a user name and password to the `login()` method:
+
+```python
+dimensions.login(username = 'somelogin', password = 'somepassword')
+```
+
+However, a more secure and more convenient way is to invoke the `login()` method without any arguments.
+
+```python
+dimensions.login()
+```
+
+When done this way, Sidewall will use the operating system's keyring/keychain functionality to get the user name and password.  If the information does not exist from a previous call to `dimensions.login()`, Sidewall will ask you for the user name and password interactively, and then store it in the keyring/keychain for next time.
+
+
+### Basic principles of running queries
+
+Sidewall defines a method, `query()`, which you can use to run a search in Dimensions and get back a list of data objects.  The method takes a single argument, a string.  Here is an example:
+
+```python
+(total, records) = dimensions.query('search publications for "SBML" return publications')
+```
+
+The form of the search query string that Sidewall can use is limited in certain ways described shortly.  The `query()` method returns multiple values: an integer representing the total number of results returned by the query, and the results themselves.  The latter is in the form of a Python generator so that you iterate over the results or do other operations like a typical Python data generator.
+
+The objects returned by the generator will be Sidewall objects of the kind discussed in the section below on [Data mappings]().  The type will correspond to the type of record expressed in the tail end of the query handed to `query()`.  For example, a query that ends in `return publications` will produce Sidewall `Publications` objects; a query that ends in `return researchers` will produce Sidewall `Researcher` objects; and so on.
+
+Sidewall currently puts the following limitations on the form of the query search string:
+* it must begin with `search`
+* it must end with `return publications`, `return researchers`, or `return grants`
+* it must only return a single type of thing (i.e., researchers _or_ publications _or_ grants)
+* it must not put facet specifiers or limits on the returned results
+* it must not use aggregation or other advanced DSL features
+
+The following is a complete example of using Sidewall to search for publications containing thes string "SBML", and then printing the year and DOI for each such publication found:
+
+```python
+import sidewall
+from sidewall import dimensions
+
+dimensions.login()
+(total, records) = dimensions.query('search publications for "SBML" return publications')
+
+print('Total found: {}'.format(total))
+for r in records:
+    print('{}: {}'.format(r.year, r.doi))
+```
+
+
 
 ### Data mappings
 
