@@ -31,10 +31,17 @@ from .debug import log
 class DimensionsCore(object):
     _attributes = []
 
-    def __init__(self, json):
+    def __init__(self, json, creator = None):
         self._json_data = json          # A dict.
         self._searched = set()          # Attributes we have searched for.
         self._hash = None
+
+        from .dimensions_cls import Dimensions
+        if isinstance(creator, Dimensions):
+            self._dimensions = creator
+        elif isinstance(creator, DimensionsCore):
+            self._dimensions = creator._dimensions
+
         try:
             self._update_attributes(json)
         except KeyError as err:
@@ -88,10 +95,12 @@ class DimensionsCore(object):
             else:
                 dim_id = objattr('id')
                 if dim_id:
-                    record_json = dimensions.record_search(search_tmpl, dim_id)
+                    dim = objattr('_dimensions')
+                    search = object.__getattribute__(dim, 'record_search')
+                    record_json = search(search_tmpl, dim_id)
                     objattr('_fill_record')(record_json)
                 else:
-                    if __debug__: log("no id value, so can't search")
+                    if __debug__: log("missing id -- can't search for \"{}\"".format(attr))
         return objattr(attr)
 
 
