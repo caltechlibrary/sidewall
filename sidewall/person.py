@@ -17,6 +17,7 @@ file "LICENSE" for more information.
 from .core import DimensionsCore
 from .debug import log
 from .exceptions import *
+from .organization import Organization
 
 # Example of researchers blob from using "return researchers":
 #
@@ -49,7 +50,8 @@ from .exceptions import *
 # },
 
 class Person(DimensionsCore):
-    _attributes = ['first_name', 'last_name', 'id', 'orcid'] + DimensionsCore._attributes
+    _attributes = ['first_name', 'last_name', 'id', 'orcid',
+                   'current_affiliation'] + DimensionsCore._attributes
 
     _search_tmpl = 'publications where researchers.id="{}" return researchers limit 1'
 
@@ -63,9 +65,9 @@ class Person(DimensionsCore):
         objattr = lambda attr: object.__getattribute__(self, attr)
         set_objattr = lambda attr, value: object.__setattr__(self, attr, value)
 
-        set_objattr('first_name', data.get('first_name', ''))
-        set_objattr('last_name',  data.get('last_name', ''))
-        set_objattr('id',         data.get('id') or data.get('researcher_id') or '')
+        set_objattr('first_name',  data.get('first_name', ''))
+        set_objattr('last_name',   data.get('last_name', ''))
+        set_objattr('id',          data.get('id') or data.get('researcher_id') or '')
 
         # They use a list for researcher's orcid in some cases but not others.
         # Not clear if they ever associate more than one orcid w someone.
@@ -82,11 +84,16 @@ class Person(DimensionsCore):
                                    .format(self.first_name, self.last_name, self.id))
             set_objattr('orcid', orcid[0])
 
+        set_objattr('current_affiliation', '')
+        if 'current_organization_id' in data:
+            org_id = data.get('current_organization_id')
+            set_objattr('current_affiliation', Organization({'id': org_id}, self))
+
 
     def _fill_record(self, json):
         # Be careful not to invoke "self.x" b/c it causes infinite recursion.
         if __debug__: log('filling object {} using {}', id(self), json)
-        if 'researchers' in json:
+        if 'researchers' in json or 'current_organization_id' in json:
             update = object.__getattribute__(self, '_update_attributes')
             update(json['researchers'][0])
 
