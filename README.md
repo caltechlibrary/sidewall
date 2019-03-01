@@ -149,10 +149,26 @@ The following table describes the fields and how they relate to values returned 
                                       
 The `affiliations` field in Sidewall's `Person` (and consequently `Author` and `Researcher`) is a list of `Organization` class objects (see below).  Although affiliations as returned by Dimensions are sparse when using a query that ends with `return researchers` (they consist only of organization identifiers), Sidewall hides this by providing complete `Organization` objects for the `affiliations` field of a `Person`, and using behind-the-scenes queries to Dimensions to fill out the organization info when the object field values are accessed.  Thus, calling programs do not need to do anything to get organization details in a result regardless of whether they use `return publications` or `return researchers`&mdash;Sidewall always provides `Organization` class objects and handles getting the field values automatically.
 
-`Author` class objects are returned when returning publication results, and in those cases, the list of a person's affiliations will reflect their affiliations with respect to a particular publication.  However, sometimes it's convenient to get more information about an author.  Sidewall allows you to create a `Researcher` object out of an `Author` object for just that reason.  Here is an example to illustrate the differences between authors and researchers and how you can conver the former to the latter:
+To make data access more uniform, Sidewall also replaces the field `current_organization_id` (which in Dimensions is a string, the identifier of an organization) with the field `current_organization`.  Its value is an `Organization` object corresponding to the organization whose identifier is found in `current_organization_id`.
 
+`Author` class objects are returned when returning publication results, and in those cases, the list of a person's affiliations will reflect their affiliations with respect to a particular publication.  However, sometimes it's convenient to get more information about an author, such as the complete list of affiliations that Dimensions has for the person in question.  Sidewall allows you to create a `Researcher` object out of an `Author` object for just that reason.  Here is an example to illustrate the differences between authors and researchers and how you can conver the former to the latter:
 
-
+```python
+>>> import sidewall
+>>> from sidewall import dimensions, Researcher
+>>> dimensions.login()
+>>> (_, pubs) = dimensions.query('search publications in title_only for "SBML" where year=2003 return publications')
+>>> pub = next(pubs)
+>>> author1 = pub.authors[0]
+>>> author1
+<Author ur.0665132124.52: 'M. Hucka'>
+>>> author1.affiliations
+[]
+>>> researcher1 = Researcher(author1)
+>>> researcher1.affiliations
+[<Organization grid.214458.e: 'University of Michigan'>, <Organization grid.20861.3d: 'California Institute of Technology'>, <Organization grid.10392.39: 'University of Tübingen'>]
+>>> 
+```
 
 
 **_Organization_**
