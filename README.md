@@ -1,7 +1,7 @@
-Sidewall<img width="22%" align="right" src=".graphics/tire-sidewall-wikipedia.svg">
+Sidewall<img width="25%" align="right" src=".graphics/tire-sidewall-wikipedia.svg">
 =============
 
-_Sidewall_ is a Python library for interacting with the [Dimensions](https://app.dimensions.ai) search API.  It defines object classes for various Dimensions data types, fetches data incrementally, copes with rate limits, and more, to help working with Dimensions more natural for Python programmers.
+_Sidewall_ is a Python package for interacting with the [Dimensions](https://app.dimensions.ai) search API.  It defines object classes for various Dimensions entity types, fetches data incrementally, caches results, copes with rate limits, and more, to make working with Dimensions more natural for Python programmers.
 
 *Authors*:      [Michael Hucka](http://github.com/mhucka)<br>
 *Repository*:   [https://github.com/caltechlibrary/sidewall](https://github.com/caltechlibrary/sidewall)<br>
