@@ -111,7 +111,14 @@ for r in records:
 
 ### Data mappings
 
-Sidewall defines object classes such as `Researcher`, `Publication`, and a few others to represent the different types of records returned as the results of a Dimensions search query.
+Sidewall defines object classes such as `Researcher`, `Publication`, and a few others to represent the different types of entities returned as the results of a Dimensions search query.  Sidewall's objects attempt to smooth over some of the confusing aspects of the data representations in Dimensions by providing single objects that consolidate different fields and facets of the same underlying "thing".  Further, the fields of an object sometimes are not available from a given query Dimensions performed by the user but _may_ be available if a _different_ kind of query is performed; Sidewall uses this knowledge in some cases to expand object field values automatically and behind the scenes as needed.
+
+The following data classes are defined by Sidewall at this time; note that this is not all the types of data that Dimensions provides today, but future work may improve Sidewall's coverage.
+
+* `Person`, with subclasses `Authors` and `Researchers`
+* `Organization`
+* `Publication`
+* `Journal`
 
 
 **_Person_**
@@ -131,16 +138,21 @@ Dimensions doesn't expose an underlying base class for people; instead, it retur
 
 The following table describes the fields and how they relate to values returned from Dimensions:
 
-|   Field         | In "return researchers"? | In "return publications"? | Sidewall expanded? |
-|-----------------|--------------------------|---------------------------|--------------------|
-| `affiliations`  | as `research_orgs`       | y                         | y                  |
-| `first_name`    | y                        | y                         | n                  |
-| `id`            | y                        | as `researcher_id`        | n                  |
-| `last_name`     | y                        | y                         | n                  |
-| `orcid`         | as `orcid_id`            | y                         | n                  |
+|   Field                | In "return researchers"? | In "return publications"?      | Sidewall expanded? |
+|------------------------|--------------------------|--------------------------------|--------------------|
+| `affiliations`         | as `research_orgs`       | y                              | y                  |
+| `current_organization` | n                        | via `current_organization_id`  | y                  |
+| `first_name`           | y                        | y                              | n                  |
+| `id`                   | y                        | as `researcher_id`             | n                  |
+| `last_name`            | y                        | y                              | n                  |
+| `orcid`                | as `orcid_id`            | y                              | n                  |
+                                      
+The `affiliations` field in Sidewall's `Person` (and consequently `Author` and `Researcher`) is a list of `Organization` class objects (see below).  Although affiliations as returned by Dimensions are sparse when using a query that ends with `return researchers` (they consist only of organization identifiers), Sidewall hides this by providing complete `Organization` objects for the `affiliations` field of a `Person`, and using behind-the-scenes queries to Dimensions to fill out the organization info when the object field values are accessed.  Thus, calling programs do not need to do anything to get organization details in a result regardless of whether they use `return publications` or `return researchers`&mdash;Sidewall always provides `Organization` class objects and handles getting the field values automatically.
 
-When using a query that ends with `return researchers`, Dimensions only provides identifiers for research organizations.  Sidewall attempts to expand on this result by retrieving additional organization field values.  
-It does this on demand the first time calling code accesses the field values rather than all at once, to reduce the number of API calls made to the Dimensions server.
+`Author` class objects are returned when returning publication results, and in those cases, the list of a person's affiliations will reflect their affiliations with respect to a particular publication.  However, sometimes it's convenient to get more information about an author.  Sidewall allows you to create a `Researcher` object out of an `Author` object for just that reason.  Here is an example to illustrate the differences between authors and researchers and how you can conver the former to the latter:
+
+
+
 
 
 **_Organization_**
