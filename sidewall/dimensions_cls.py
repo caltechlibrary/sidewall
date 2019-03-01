@@ -215,7 +215,14 @@ class Dimensions(Singleton):
         obj  = _KNOWN_RESULT_TYPES[result_type].objclass
         while skip < total:
             for record in data[result_type]:
-                yield obj(record, creator = self)
+                obj_id = record['id']
+                if obj_id in self._cache:
+                    if __debug__: log('returning cached copy of {}', obj_id)
+                    yield self._cache[obj_id]
+                else:
+                    new_object = obj(record, creator = self)
+                    self._cache[obj_id] = new_object
+                    yield new_object
             skip += fetch_size
             query = base_query + ' limit ' + str(fetch_size) + ' skip ' + str(skip)
             data = self._post(query)
