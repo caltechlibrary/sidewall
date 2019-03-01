@@ -20,6 +20,9 @@ except:
 import sidewall
 from sidewall import dimensions
 
+if len(sys.argv) > 1 and sys.argv[1] == '-d':
+    sidewall.set_debug(True)
+
 dimensions.login()
 
 print('sending query to Dimensions')
