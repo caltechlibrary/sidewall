@@ -14,6 +14,7 @@ open-source software released under a 3-clause BSD license.  Please see the
 file "LICENSE" for more information.
 '''
 
+import inspect
 import json as jsonlib
 
 from .debug import log
@@ -35,11 +36,14 @@ class DimensionsCore(object):
         self._json_data = json          # A dict.
         self._searched = set()          # Attributes we have searched for.
         self._hash = None
+        self._dimensions = None
 
         from .dimensions_cls import Dimensions
         if isinstance(creator, Dimensions):
             self._dimensions = creator
         elif isinstance(creator, DimensionsCore):
+            self._dimensions = creator._dimensions
+        elif hasattr(creator, '_dimensions'):
             self._dimensions = creator._dimensions
 
         try:
@@ -83,24 +87,34 @@ class DimensionsCore(object):
         if not (objattr(attr) or attr in objattr('_searched')):
             if __debug__: log('"{}" not yet set on object {}', attr, id(self))
             # Attribute has no value and we haven't tried searching for it.
-            # Whether we can search or not, we set the flag that we tried.
+            # We now set the flag that we tried, whether we can search or not.
             searched = objattr('_searched')
             searched.add(attr)      # Warning: don't combine this w/ next line.
             set_objattr('_searched', searched)
+            # All the methods for this approach need a Dimensions id.
+            dim_id = objattr('id')
+            if not dim_id:
+                if __debug__: log("missing id -- can't search for \"{}\"", attr)
+                return objattr(attr)
             try:
+                # If we know of a way to expand values on this object, there
+                # will be a class attribute providing a search template.
                 search_tmpl = objattr('_search_tmpl')
             except:
                 if __debug__: log("no search template -- can't fill in values")
-                pass
             else:
-                dim_id = objattr('id')
-                if dim_id:
-                    dim = objattr('_dimensions')
-                    search = object.__getattribute__(dim, 'record_search')
-                    record_json = search(search_tmpl, dim_id)
-                    objattr('_fill_record')(record_json)
-                else:
-                    if __debug__: log("missing id -- can't search for \"{}\"".format(attr))
+                dim = objattr('_dimensions')
+                search = object.__getattribute__(dim, 'record_search')
+                record_json = search(search_tmpl, dim_id)
+                # Subclasses may have their own _fill_record.  Look for all.
+                classes = inspect.getmro(self.__class__)
+                for c in classes[:-1]:  # Skip class 'object'.
+                    try:
+                        fill_record = object.__getattribute__(c, '_fill_record')
+                        if __debug__: log('using _fill_record on {}', str(c))
+                        fill_record(self, record_json)
+                    except:
+                        pass
         return objattr(attr)
 
 

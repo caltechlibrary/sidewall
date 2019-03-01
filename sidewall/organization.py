@@ -69,7 +69,7 @@ class Organization(DimensionsCore):
     def _fill_record(self, json):
         # Be careful not to invoke "self.x" b/c it causes infinite recursion.
         if __debug__: log('filling object {} using {}', id(self), json)
-        if 'research_orgs' in json:
+        if 'research_orgs' in json and len(json['research_orgs']) > 0:
             update = object.__getattribute__(self, '_update_attributes')
             update(json['research_orgs'][0])
 

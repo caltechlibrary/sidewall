@@ -51,7 +51,7 @@ from .organization import Organization
 
 class Person(DimensionsCore):
     _attributes = ['first_name', 'last_name', 'id', 'orcid',
-                   'current_affiliation'] + DimensionsCore._attributes
+                   'current_organization'] + DimensionsCore._attributes
 
     _search_tmpl = 'publications where researchers.id="{}" return researchers limit 1'
 
@@ -72,31 +72,42 @@ class Person(DimensionsCore):
         # They use a list for researcher's orcid in some cases but not others.
         # Not clear if they ever associate more than one orcid w someone.
         # Currently we assume there's only 1 orcid.
-        set_objattr('orcid', data.get('orcid_id') or data.get('orcid') or '')
-        orcid = objattr('orcid')
-        if isinstance(orcid, str) and '[' in orcid:
-            # I suspect there's a bug in how I store test cases, but let's
-            # handle the case where a list was turned into a string.
-            set_objattr('orcid', objattr('orcid').strip("'[]"))
-        elif isinstance(orcid, list):
-            if len(orcid) > 1:
-                raise DataMismatch('More than one ORCID id for {} {} ({})'
-                                   .format(self.first_name, self.last_name, self.id))
-            set_objattr('orcid', orcid[0])
+        orcid_value = data.get('orcid_id') or data.get('orcid') or ''
+        set_objattr('orcid', _normalized_orcid(orcid_value))
 
-        set_objattr('current_affiliation', '')
+        set_objattr('current_organization', '')
         if 'current_organization_id' in data:
             org_id = data.get('current_organization_id')
-            set_objattr('current_affiliation', Organization({'id': org_id}, self))
+            set_objattr('current_organization', Organization({'id': org_id}, self))
 
 
     def _fill_record(self, json):
         # Be careful not to invoke "self.x" b/c it causes infinite recursion.
+        objattr = lambda attr: object.__getattribute__(self, attr)
+        set_objattr = lambda attr, value: object.__setattr__(self, attr, value)
+
         if __debug__: log('filling object {} using {}', id(self), json)
-        if 'researchers' in json or 'current_organization_id' in json:
-            update = object.__getattribute__(self, '_update_attributes')
-            update(json['researchers'][0])
+        if 'researchers' in json and len(json['researchers']) > 0:
+            data = json['researchers'][0]
+            if not objattr('orcid') and 'orcid_id' in data:
+                set_objattr('orcid', _normalized_orcid(data['orcid_id']))
+        if 'current_organization_id' in json and json['current_organization_id']:
+            org_id = json['current_organization_id']
+            set_objattr('current_organization', Organization({'id': org_id}, self))
 
 
     def __repr__(self):
         return "<Person {}: '{} {}'>".format(self.id, self.first_name, self.last_name)
+
+
+def _normalized_orcid(value):
+    if isinstance(value, str) and '[' in value:
+        # I suspect there's a bug in how I store test cases, but let's
+        # handle the case where a list was turned into a string.
+        return value.strip("'[]")
+    elif isinstance(value, list):
+        if len(value) > 1:
+            raise DataMismatch('More than one ORCID id: {}'.format(value))
+        return value[0]
+    else:
+        return value

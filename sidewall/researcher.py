@@ -29,7 +29,7 @@ class Researcher(Person):
             # We're given an author object, probably obtained from a pub search,
             # and we want to fill it out to create a Researcher object.
             if __debug__: log('converting Author {} to Researcher', id(data))
-            super().__init__(data.__dict__)
+            super().__init__(data._json_data, creator = data)
         else:
             # This is a standard initialization, not a case of upconverting.
             super().__init__(data)
@@ -49,6 +49,17 @@ class Researcher(Person):
             affiliations = objattr('affiliations')
             for org_id in data['research_orgs']:
                 affiliations.append(Organization({'id': org_id}, self))
+
+
+    def _fill_record(self, json):
+        # Be careful not to invoke "self.x" b/c it causes infinite recursion.
+        if 'researchers' in json:
+            data = json['researchers'][0]
+            if 'research_orgs' in data and len(data['research_orgs']) > 0:
+                objattr = lambda attr: object.__getattribute__(self, attr)
+                affiliations = objattr('affiliations')
+                for org_id in data['research_orgs']:
+                    affiliations.append(Organization({'id': org_id}, self))
 
 
     def __repr__(self):
