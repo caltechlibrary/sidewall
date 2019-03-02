@@ -49,7 +49,12 @@ class Person(DimensionsCore):
         set_objattr('current_organization', '')
         if 'current_organization_id' in data:
             org_id = data.get('current_organization_id')
-            set_objattr('current_organization', Organization({'id': org_id}, self))
+            dimensions = objattr('_dimensions')
+            if dimensions:
+                org = dimensions.factory(Organization, {'id': org_id}, self)
+            else:
+                org = Organization({'id': org_id}, self)
+            set_objattr('current_organization', org)
 
 
     def _fill_record(self, json):
@@ -68,7 +73,12 @@ class Person(DimensionsCore):
         if not objattr('current_organization') and 'current_organization_id' in json:
             org_id = json['current_organization_id']
             if org_id:
-                set_objattr('current_organization', Organization({'id': org_id}, self))
+                dimensions = objattr('_dimensions')
+                if dimensions:
+                    org = dimensions.factory(Organization, {'id': org_id}, self)
+                else:
+                    org = Organization({'id': org_id}, self)
+                set_objattr('current_organization', org)
 
 
     def __repr__(self):

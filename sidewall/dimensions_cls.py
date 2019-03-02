@@ -116,13 +116,15 @@ class Dimensions(Singleton):
             raise AuthenticationFailure('Dimensions did not return a token')
 
 
+    _strip_whitespace = str.maketrans('', '', string.whitespace)
+
     def record_search(self, query, id, retry = 1):
         if __debug__: log('initiating record search involving {}'.format(id))
         search = 'search ' + query.format(id)
-        cache_key = self._cache_key(search)
-        if cache_key in self._cache:
+        key = search.translate(self._strip_whitespace)
+        if key in self._cache:
             if __debug__: log("returning cached value for '{}'", search)
-            return self._cache[cache_key]
+            return self._cache[key]
 
         if __debug__: log("posting query '{}'", search)
         headers = {'Authorization': "JWT " + self._dimensions_token}
@@ -132,7 +134,7 @@ class Dimensions(Singleton):
         # Check for problems.
         if isinstance(error, NoContent):
             if __debug__: log('server returned a "no content" code')
-            self._cache[cache_key] = {}
+            self._cache[key] = {}
             return {}
         elif error:
             raise error
@@ -152,7 +154,7 @@ class Dimensions(Singleton):
         else:
             data = resp.json()
             if __debug__: log('response: {}', data)
-            self._cache[cache_key] = data
+            self._cache[key] = data
             return data
 
 
@@ -220,6 +222,7 @@ class Dimensions(Singleton):
                     if __debug__: log('returning cached copy of {}', obj_id)
                     yield self._cache[obj_id]
                 else:
+                    if __debug__: log('caching {}', obj_id)
                     new_object = obj(record, creator = self)
                     self._cache[obj_id] = new_object
                     yield new_object
@@ -271,12 +274,6 @@ class Dimensions(Singleton):
             return sys.stdin.readline().rstrip()
 
 
-    _strip_whitespace = str.maketrans('', '', string.whitespace)
-
-    def _cache_key(self, query):
-       return query.translate(self._strip_whitespace)
-
-
     def _result_type(self, query):
         for typename in _KNOWN_RESULT_TYPES.keys():
             if re.search(r'return\s*' + typename, query):
@@ -291,8 +288,24 @@ class Dimensions(Singleton):
                 return re.sub(stmt, 'return ' + typename + data.elaboration, query)
         return query
 
+
+    def factory(self, cls, data, creator):
+        obj_id = data.get('id', '')
+        if obj_id in self._cache:
+            if __debug__: log('returning cached object for "{}"', obj_id)
+            return self._cache[obj_id]
+        if __debug__: log('creating new {}', cls)
+        obj = cls(data, creator = creator)
+        if obj_id:
+            self._cache[obj_id] = obj
+        return obj
+
+
+    def cache_stats(self):
+        return {'total_items': len(self._cache)}
+
 
-# Main entry point.
+# MAIN entry point.
 # .............................................................................
 # The following instantiates the class and expose the interface as "dimensions".
 # Callers can do things like "dimensions.login()" and "dimensions.search()"

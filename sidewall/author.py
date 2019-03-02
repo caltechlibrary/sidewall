@@ -53,8 +53,13 @@ class Author(Person):
         if 'affiliations' in data:
             objattr = lambda attr: object.__getattribute__(self, attr)
             affiliations = objattr('affiliations')
-            for org in data['affiliations']:
-                affiliations.append(Organization(org, self))
+            dimensions = objattr('_dimensions')
+            if dimensions:
+                for org in data['affiliations']:
+                    affiliations.append(dimensions.factory(Organization, org, self))
+            else:
+                for org in data['affiliations']:
+                    affiliations.append(Organization(org, self))
 
 
     def __repr__(self):

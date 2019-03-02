@@ -95,8 +95,14 @@ class Publication(DimensionsCore):
             # I don't understand the point of the double list. Let's be cautious.
             if len(data['author_affiliations']) > 1:
                 raise DataMismatch('Affiliations list holds more than one list')
-            for a in data['author_affiliations'][0]:
-                self.author_affiliations.append(Author(a, self))
+            affiliations = objattr('author_affiliations')
+            dimensions = objattr('_dimensions')
+            if dimensions:
+                for a in data['author_affiliations'][0]:
+                    affiliations.append(dimensions.factory(Author, a, self))
+            else:
+                for a in data['author_affiliations'][0]:
+                    affiliations.append(Author(a, self))
 
 
     @property

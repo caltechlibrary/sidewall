@@ -59,8 +59,13 @@ class Researcher(Person):
         if 'research_orgs' in data:
             objattr = lambda attr: object.__getattribute__(self, attr)
             affiliations = objattr('affiliations')
-            for org_id in data['research_orgs']:
-                affiliations.append(Organization({'id': org_id}, self))
+            dimensions = objattr('_dimensions')
+            if dimensions:
+                for org_id in data['research_orgs']:
+                    affiliations.append(dimensions.factory(Organization, {'id': org_id}, self))
+            else:
+                for org_id in data['research_orgs']:
+                    affiliations.append(Organization({'id': org_id}, self))
 
 
     def _fill_record(self, json):
@@ -69,8 +74,14 @@ class Researcher(Person):
         if __debug__: log('filling object {} using {}', id(self), json)
         if not objattr('affiliations') and 'researchers' in json:
             data = json['researchers'][0]
-            if 'research_orgs' in data and len(data['research_orgs']) > 0:
-                affiliations = objattr('affiliations')
+            if 'research_orgs' not in data or len(data['research_orgs']) == 0:
+                return
+            affiliations = objattr('affiliations')
+            dimensions = objattr('_dimensions')
+            if dimensions:
+                for org_id in data['research_orgs']:
+                    affiliations.append(dimensions.factory(Organization, {'id': org_id}, self))
+            else:
                 for org_id in data['research_orgs']:
                     affiliations.append(Organization({'id': org_id}, self))
 
