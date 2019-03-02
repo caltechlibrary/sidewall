@@ -14,7 +14,6 @@ open-source software released under a 3-clause BSD license.  Please see the
 file "LICENSE" for more information.
 '''
 
-from .core import DimensionsCore
 from .debug import log
 from .person import Person
 from .organization import Organization
