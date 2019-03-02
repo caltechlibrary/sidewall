@@ -138,14 +138,14 @@ Dimensions doesn't expose an underlying base class for people; instead, it retur
 
 The following table describes the fields and how they relate to values returned from Dimensions:
 
-|   Field                | In "return researchers"? | In "return publications"?      | Sidewall expanded? |
-|------------------------|--------------------------|--------------------------------|--------------------|
-| `affiliations`         | as `research_orgs`       | y                              | y                  |
-| `current_organization` | n                        | via `current_organization_id`  | y                  |
-| `first_name`           | y                        | y                              | n                  |
-| `id`                   | y                        | as `researcher_id`             | n                  |
-| `last_name`            | y                        | y                              | n                  |
-| `orcid`                | as `orcid_id`            | y                              | n                  |
+|   Field                | Type                   | In `return researchers`? | In `return publications`?      | Filled? |
+|------------------------|------------------------|--------------------------|--------------------------------|--------------------|
+| `affiliations`         | [`Organization`, ...]  | via `research_orgs`       | ✓                              | ✓                  |
+| `current_organization` | `Organization`         | n                        | via `current_organization_id`  | ✓                  |
+| `first_name`           | str                    | ✓                        | ✓                              | n                  |
+| `id`                   | str                    | ✓                        | as `researcher_id`             | n                  |
+| `last_name`            | str                    | ✓                        | ✓                              | n                  |
+| `orcid`                | str                    | as `orcid_id`            | ✓                              | n                  |
                                       
 The `affiliations` field in Sidewall's `Person` (and consequently `Author` and `Researcher`) is a list of `Organization` class objects (see below).  Although affiliations as returned by Dimensions are sparse when using a query that ends with `return researchers` (they consist only of organization identifiers), Sidewall hides this by providing complete `Organization` objects for the `affiliations` field of a `Person`, and using behind-the-scenes queries to Dimensions to fill out the organization info when the object field values are accessed.  Thus, calling programs do not need to do anything to get organization details in a result regardless of whether they use `return publications` or `return researchers`&mdash;Sidewall always provides `Organization` class objects and handles getting the field values automatically.
 
@@ -173,24 +173,65 @@ To make data access more uniform, Sidewall also replaces the field `current_orga
 
 **_Organization_**
 
-The following table describes the fields and how they relate to values returned from Dimensions:
+Sidewall uses the object class `Organization` to represent an organization in results returned by Dimensions.  In Sidewall, the set of fields possessed by an `Organization` is the union of all fields that Dimensions provides in different contexts for organizations.  The following table describes the fields and how they relate to values returned from Dimensions:
 
-|   Field         | In "return research_orgs"? | In "return publications"? | Sidewall expanded? |
-|-----------------|----------------------------|---------------------------|--------------------|
-| `acronym`       | y                          | n                         | y                  |
-| `city`          | n                          | y                         | n                  |
-| `city_id`       | n                          | y                         | n                  |
-| `country`       | n                          | y                         | n                  |
-| `country_code`  | n                          | y                         | n                  |
-| `country_name`  | y                          | n                         | y                  |
-| `id`            | y                          | y                         | n                  |
-| `name`          | y                          | y                         | n                  |
-| `state`         | n                          | y                         | n                  |
-| `state_code`    | n                          | y                         | n                  |
+|   Field         | Type | In "return research_orgs"? | In "return publications"? | Sidewall filled? |
+|-----------------|------|----------------------------|---------------------------|--------------------|
+| `acronym`       | str  | ✓                          | n                         | ✓                  |
+| `city`          | str  | n                          | ✓                         | n                  |
+| `city_id`       | str  | n                          | ✓                         | n                  |
+| `country`       | str  | n                          | ✓                         | n                  |
+| `country_code`  | str  | n                          | ✓                         | n                  |
+| `country_name`  | str  | ✓                          | n                         | ✓                  |
+| `id`            | str  | ✓                          | ✓                         | n                  |
+| `name`          | str  | ✓                          | ✓                         | n                  |
+| `state`         | str  | n                          | ✓                         | n                  |
+| `state_code`    | str  | n                          | ✓                         | n                  |
+
+Dimensions returns different field values in different contexts.  For example, the information about organizations included in an author's affiliation list in a publication is somewhat different from what is provided if a search ending in `return research_orgs` is used.  Sidewall makes the assumption that an organization with a given organization identifier ("grid id") is the same organization no matter the context in which it is mentioned in a search result, and so Sidewall smooths over the field differences and, as with `Researcher` and `Author`, queries Dimensions behind the scenes to get missing values when it can (and when they exist).
 
 
 **_Publication_**
 
+The `Publication` object class is mostly unchanged from the Dimensions publication entity, but in Dimensions, different fields are exposed depending on the type of publication and whether fieldset modifiers are being used.  (The available fieldsets for publications are `basics`, `extras`, and `book`.)  Sidewall's `Publication` object class contains all possible fields, but the values of some fields may not be filled in depending on the type of publication in question.  For example, journals will not have a value for `book_doi`.  The following table describes the fields in `Publication` objects:
+
+
+| Field                        | Type            | In `return publications`? |
+|------------------------------|-----------------|---------------------------|
+| `altmetric`                  | str             | ✓
+| `authors`                    | [`Author`, ...] | via `author_affiliations` |
+| `author_affiliations`        | [`Author`, ...] | via `author_affiliations` |
+| `book_doi`                   | str             | ✓
+| `book_series_title`          | str             | ✓
+| `book_title`                 | str             | ✓
+| `date`                       | str             | ✓
+| `date_inserted`              | str             | ✓
+| `doi`                        | str             | ✓
+| `field_citation_ratio`       | str             | ✓
+| `id`                         | str             | ✓
+| `issn`                       | str             | ✓
+| `issue`                      | str             | ✓
+| `journal`                    | `Journal`       | ✓
+| `linkout`                    | str             | ✓
+| `mesh_terms`                 | str             | ✓
+| `open_access`                | str             | ✓
+| `pages`                      | str             | ✓
+| `pmcid`                      | str             | ✓
+| `pmid`                       | str             | ✓
+| `proceedings_title`          | str             | ✓
+| `publisher`                  | str             | ✓
+| `references`                 | str             | ✓
+| `relative_citation_ratio`    | str             | ✓
+| `research_org_country_names` | str             | ✓
+| `research_org_state_names`   | str             | ✓
+| `supporting_grant_ids`       | str             | ✓
+| `times_cited`                | str             | ✓
+| `title`                      | str             | ✓
+| `type`                       | str             | ✓
+| `volume`                     | str             | ✓
+| `year`                       | str             | ✓
+
+Sidewall's `Publication` objects use a list of `Author` objects to represent authors, and introduce an alias called `authors` for the field `author_affiliations`.  The latter alias is for convenience and an attempt to bring more intuitiveness to the structure of publications records.  (The name `author_affiliations` in the Dimensions data is potentially confusing because the name suggests it may be a list of organizations rather than a list of authors.  Providing a field named `authors` removes this ambiguity.)
 
 
 ⁇ Getting help and support
