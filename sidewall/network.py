@@ -32,6 +32,7 @@ import warnings
 
 from .debug import log
 from .ratelimit import RateLimit, rate_limit
+from .exceptions import *
 
 
 # Constants.
@@ -173,10 +174,12 @@ def net(get_or_post, url, session = None, polling = False, recursing = 0, **kwar
     # and 302 redirects automatically, so we don't need to do it here.
     code = req.status_code
     error = None
-    if code in [404, 410] and not polling:
-        error = NoContent(addurl("No content found"))
+    if code == 400:
+        error = RequestError('Server rejected the request')
     elif code in [401, 402, 403, 407, 451, 511]:
         error = AuthenticationFailure(addurl('Access is forbidden'))
+    elif code in [404, 410] and not polling:
+        error = NoContent(addurl("No content found"))
     elif code in [405, 406, 409, 411, 412, 414, 417, 428, 431, 505, 510]:
         error = InternalError(addurl('Server returned code {}'.format(code)))
     elif code in [415, 416]:
@@ -188,6 +191,7 @@ def net(get_or_post, url, session = None, polling = False, recursing = 0, **kwar
     elif code in [500, 501, 502, 506, 507, 508]:
         error = ServiceFailure('Internal server error (HTTP code {})'.format(code))
     elif not (200 <= code < 400):
+        import pdb; pdb.set_trace()
         error = NetworkFailure("Unable to resolve {}".format(url))
     return (req, error)
 
