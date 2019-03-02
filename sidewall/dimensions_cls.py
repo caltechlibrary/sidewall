@@ -132,16 +132,12 @@ class Dimensions(Singleton):
         (resp, error) = net('post', _DSL_URL, session = self._session,
                             data = search, headers = headers)
 
-        # Check for problems.
+        # Deal with problems, retry if appropriate, or fail.
         if isinstance(error, NoContent):
             if __debug__: log('server returned a "no content" code')
             self._cache[key] = {}
             return {}
-        elif error:
-            raise error
-
-        # Return the results or deal with issues.
-        if resp.status_code == 202:
+        elif resp.status_code == 202:
             # Request was received by the server but not acted upon.
             if retry <= _MAX_RETRIES:
                 if __debug__: log('got code 202 -- pausing & retrying')
@@ -149,9 +145,10 @@ class Dimensions(Singleton):
                 return self.record_search(query, id, retry + 1)
             else:
                 raise ServiceFailure('Server returned code 202 multiple times')
-        elif 200 < resp.status_code <= 400:
-            # Not a code 200 or 202, not a redirect, but something's not right.
-            raise QueryError('Server rejected the query')
+        elif resp.status_code == 400:
+            raise RequestError(self._request_error_msg(resp))
+        elif error:
+            raise error
         else:
             data = resp.json()
             if __debug__: log('response: {}', data)
@@ -170,7 +167,7 @@ class Dimensions(Singleton):
         result_type = self._result_type(query)
         if not result_type:
             txt = 'Unsupported result type -- can only handle "{}"'
-            raise QueryError(txt.format('", "'.join(_KNOWN_RESULT_TYPES) + '.'))
+            raise RequestError(txt.format('", "'.join(_KNOWN_RESULT_TYPES) + '.'))
 
         # Remove result limits in the query because we need to handle that.
         if re.search(r'limit\s+[0-9]+(\s+skip\s+[0-9]+)?', query):
@@ -215,9 +212,21 @@ class Dimensions(Singleton):
         headers = {'Authorization': "JWT " + self._dimensions_token}
         (resp, error) = net('post', _DSL_URL, session = self._session,
                             data = query, headers = headers)
+
+        # Deal with problems, retry if appropriate, or fail.
         if isinstance(error, NoContent):
             if __debug__: log('server returned a "no content" code')
             return []
+        elif resp.status_code == 202:
+            # Request was received by the server but not acted upon.
+            if retry <= _MAX_RETRIES:
+                if __debug__: log('got code 202 -- pausing & retrying')
+                sleep(_RETRY_SLEEP)     # Sleep a short time and try again.
+                return self._post(query, retry + 1)
+            else:
+                raise ServiceFailure('Server returned code 202 multiple times')
+        elif resp.status_code == 400:
+            raise RequestError(self._request_error_msg(resp))
         elif error:
             raise error
         else:
@@ -316,6 +325,23 @@ class Dimensions(Singleton):
 
     def cache_stats(self):
         return {'total_items': len(self._cache)}
+
+
+    def _request_error_msg(self, resp):
+        text = 'Server rejected the query'
+        if resp.content:
+            try:
+                json_payload = jsonlib.loads(resp.content.decode())
+                if 'errors' in json_payload.keys():
+                    json_payload = json_payload['errors']
+                if 'query' in json_payload.keys():
+                    json_payload = json_payload['query']
+                if 'details' in json_payload.keys():
+                    details = json_payload['details'][0]
+                text += (' -- ' + details)
+            except:
+                pass
+        return text
 
 
 # MAIN entry point.
