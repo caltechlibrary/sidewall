@@ -234,6 +234,17 @@ The `Publication` object class is mostly unchanged from the Dimensions publicati
 Sidewall's `Publication` objects use a list of `Author` objects to represent authors, and introduce an alias called `authors` for the field `author_affiliations`.  The latter alias is for convenience and an attempt to bring more intuitiveness to the structure of publications records.  (The name `author_affiliations` in the Dimensions data is potentially confusing because the name suggests it may be a list of organizations rather than a list of authors.  Providing a field named `authors` removes this ambiguity.)
 
 
+**_Journal_**
+
+The `Journal` object class is simple.  It is a direct mapping to the JSON data object that Dimensions returns as the value of a publication's `journal` field.
+
+| Field | Type | In `return publications`? |
+|-------|------|---------------------------|
+| id    | str  | ✓                         |
+| title | str  | ✓                         |
+
+
+
 ⁇ Getting help and support
 --------------------------
 
