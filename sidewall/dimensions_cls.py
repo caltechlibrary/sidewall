@@ -179,20 +179,28 @@ class Dimensions(Singleton):
         base_query = self._expanded_query(query)
         first_query = base_query + ' limit ' + str(fetch_size)
 
-        # Need run the first query to get the total_count.
+        # Need run the first query here, to get the total_count.
         data = self._post(first_query)
-        if '_stats' not in data:
-            raise DataMismatch('Data from Dimensions not in expected form')
-        if 'total_count' not in data['_stats']:
-            raise DataMismatch('Data from Dimensions missing total count')
-        total = data['_stats']['total_count']
-        if total == 0:
-            return []
         if result_type not in data:
             raise DataMismatch('Data from Dimensions does not have expected result type')
         if len(data[result_type]) == 0:
             raise DataMismatch('Data inconsistency in results from Dimensions')
+        if '_stats' not in data:
+            raise DataMismatch('Data from Dimensions not in expected form')
+        if 'total_count' not in data['_stats']:
+            raise DataMismatch('Data from Dimensions missing total count')
 
+        total = data['_stats']['total_count']
+        if total == 0:
+            if __debug__: log('query produced 0 results')
+            return []
+        else:
+            if __debug__: log('query produced {}', total)
+            if max_results:
+               if __debug__: log('will keep to max_results {}', max_results)
+               total = max_results
+
+        # Hand off results processing and query iteration to the iterator.
         return (total, self._iterator(base_query, data, result_type, fetch_size, total))
 
 
