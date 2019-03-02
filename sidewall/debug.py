@@ -32,6 +32,11 @@ if __debug__:
     handler.setLevel(logging.DEBUG)
     sidewall_logger.addHandler(handler)
 
+    # This next variable makes a huge speed difference.  It's used to avoid
+    # having to call logging.getLogger('sidewall').isEnabledFor(logging.DEBUG)
+    # at runtime in log() to test whether debugging is turned on.
+    sidewall_debugging = False
+
 
 # Exported functions.
 # .............................................................................
@@ -41,6 +46,7 @@ def set_debug(enabled):
     if __debug__:
         from logging import DEBUG, WARNING
         logging.getLogger('sidewall').setLevel(DEBUG if enabled else WARNING)
+        sidewall_debugging = True
 
 
 def log(s, *other_args):
@@ -50,7 +56,7 @@ def log(s, *other_args):
         # This test for the level may seem redundant, but it's not: it prevents
         # the string format from always being performed if logging is not
         # turned on and the user isn't running Python with -O.
-        if logging.getLogger('sidewall').isEnabledFor(logging.DEBUG):
+        if sidewall_debugging:
             func = inspect.currentframe().f_back.f_code.co_name
             path = inspect.currentframe().f_back.f_code.co_filename
             filename = os.path.basename(path)
