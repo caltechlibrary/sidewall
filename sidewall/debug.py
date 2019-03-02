@@ -21,7 +21,10 @@ import sidewall
 # .............................................................................
 
 if __debug__:
+    import inspect
     import logging
+    import os
+
     sidewall_logger = logging.getLogger('sidewall')
     formatter       = logging.Formatter('%(name)s %(message)s')
     handler         = logging.StreamHandler()
@@ -44,9 +47,12 @@ def log(s, *other_args):
     '''Logs a debug message. 's' can contain format directive, and the
     remaining arguments are the arguments to the format string.'''
     if __debug__:
-        import inspect, os
-        func = inspect.currentframe().f_back.f_code.co_name
-        path = inspect.currentframe().f_back.f_code.co_filename
-        filename = os.path.basename(path)
-        logging.getLogger('sidewall').debug('{} {}(): '.format(filename, func)
-                                            + s.format(*other_args))
+        # This test for the level may seem redundant, but it's not: it prevents
+        # the string format from always being performed if logging is not
+        # turned on and the user isn't running Python with -O.
+        if logging.getLogger('sidewall').isEnabledFor(logging.DEBUG):
+            func = inspect.currentframe().f_back.f_code.co_name
+            path = inspect.currentframe().f_back.f_code.co_filename
+            filename = os.path.basename(path)
+            logging.getLogger('sidewall').debug('{} {}(): '.format(filename, func)
+                                                + s.format(*other_args))
