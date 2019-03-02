@@ -38,13 +38,10 @@ class DimensionsCore(object):
         self._hash = None
         self._dimensions = None
 
-        from .dimensions_cls import Dimensions
-        if isinstance(creator, Dimensions):
+        if isinstance(creator, DimensionsCore):
+            self._dimensions = creator._dimensions
+        elif creator:
             self._dimensions = creator
-        elif isinstance(creator, DimensionsCore):
-            self._dimensions = creator._dimensions
-        elif hasattr(creator, '_dimensions'):
-            self._dimensions = creator._dimensions
 
         try:
             self._update_attributes(json)
