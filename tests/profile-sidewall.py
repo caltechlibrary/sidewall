@@ -28,14 +28,13 @@ if len(sys.argv) > 1 and sys.argv[1] == '-d':
 
 dimensions.login()
 
-print('Sending query for 1000 publications to Dimensions.')
+print('Sending query & building objects.')
 
 pr = cProfile.Profile()
 pr.enable()
 (total, pubs) = dimensions.query('search publications where research_orgs.id = "grid.20861.3d" return publications',
                                  max_results = 1000)
-
-print('Got results, now forcing internal iteration to build objects.')
+# Creating list forces all 1000 results to be fetched and Sidewall objects built
 list(pubs)
 pr.disable()
 
