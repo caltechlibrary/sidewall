@@ -42,6 +42,6 @@ class DataMismatch(Exception):
     the Dimensions API has changed recently, or it reflects a bug in Sidewall.'''
     pass
 
-class QueryError(Exception):
-    '''Problem with the query string.'''
+class RequestError(Exception):
+    '''Problem with the Dimensions query or request.'''
     pass
