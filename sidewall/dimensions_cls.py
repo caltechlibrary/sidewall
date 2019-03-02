@@ -71,6 +71,7 @@ _MAX_RETRIES = 3
 _RETRY_SLEEP = 2
 '''How many seconds to wait between retrying a query.'''
 
+# Note: my informal testing consistently showed 100 is better than 50, 200, 500
 _FETCH_SIZE = 100
 '''How many results to get at a time from Dimensions.'''
 
@@ -170,6 +171,10 @@ class Dimensions(Singleton):
         if not result_type:
             txt = 'Unsupported result type -- can only handle "{}"'
             raise QueryError(txt.format('", "'.join(_KNOWN_RESULT_TYPES) + '.'))
+
+        # Remove result limits in the query because we need to handle that.
+        if re.search(r'limit\s+[0-9]+(\s+skip\s+[0-9]+)?', query):
+            query = re.sub(r'limit\s+[0-9]+(\s+skip\s+[0-9]+)?', '', query).strip()
 
         # Prepare the first query to get the first set of results.
         if max_results and max_results < _FETCH_SIZE:
