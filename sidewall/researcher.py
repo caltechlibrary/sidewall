@@ -21,6 +21,18 @@ from .organization import Organization
 from .person import Person
 
 
+# Example of a "researchers" blob from using "return researchers":
+#
+# 'researchers': [{ 'id': 'ur.0665132124.52',
+#                   'count': 68,
+#                   'first_name': 'Michael',
+#                   'last_name': 'Hucka',
+#                   'orcid_id': ['0000-0001-9105-5960'],
+#                   'research_orgs': [ 'grid.214458.e',
+#                                      'grid.20861.3d',
+#                                      'grid.10392.39',
+#                                    ]}]
+
 class Researcher(Person):
     _attributes = ['affiliations'] + Person._attributes
 
@@ -53,10 +65,11 @@ class Researcher(Person):
 
     def _fill_record(self, json):
         # Be careful not to invoke "self.x" b/c it causes infinite recursion.
-        if 'researchers' in json:
+        objattr = lambda attr: object.__getattribute__(self, attr)
+        if __debug__: log('filling object {} using {}', id(self), json)
+        if not objattr('affiliations') and 'researchers' in json:
             data = json['researchers'][0]
             if 'research_orgs' in data and len(data['research_orgs']) > 0:
-                objattr = lambda attr: object.__getattribute__(self, attr)
                 affiliations = objattr('affiliations')
                 for org_id in data['research_orgs']:
                     affiliations.append(Organization({'id': org_id}, self))

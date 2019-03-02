@@ -19,9 +19,10 @@ from .__version__    import __author__, __email__
 from .__version__    import __license__, __copyright__
 
 from .exceptions     import *
-from .author         import Author
 from .debug          import set_debug
 from .dimensions_cls import dimensions
+
+from .author         import Author
 from .journal        import Journal
 from .organization   import Organization
 from .person         import Person

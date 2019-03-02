@@ -86,15 +86,15 @@ class Publication(DimensionsCore):
         set_objattr('year',                       data.get('year', ''))
 
         # Journal is an object.
-        set_objattr('journal', Journal(data['journal']) if 'journal' in data else '')
+        set_objattr('journal', Journal(data['journal'], self) if 'journal' in data else '')
 
         # Affiliations are a list.
         set_objattr('author_affiliations', [])
         if 'author_affiliations' in data:
-            # All cases I've seen so far have been a list containing 1 list.
+            # All cases seen so far have been a list containing another list.
+            # I don't understand the point of the double list. Let's be cautious.
             if len(data['author_affiliations']) > 1:
                 raise DataMismatch('Affiliations list holds more than one list')
-
             for a in data['author_affiliations'][0]:
                 self.author_affiliations.append(Author(a, self))
 

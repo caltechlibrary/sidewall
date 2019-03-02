@@ -66,9 +66,9 @@ class DimensionsCore(object):
         if attr in objattr('_attributes'):
             existing_attrs = objattr('__dict__')
             if attr not in existing_attrs:
-                if __debug__: log('setting "{}" on object {}', attr, id(self))
                 json = objattr('_json_data')
                 if attr in json:
+                    if __debug__: log('setting "{}" on object {}', attr, id(self))
                     value = self._json_data.get(attr)
                     set_objattr(attr, value)
                     return value

@@ -18,6 +18,7 @@ from .core import DimensionsCore
 from .debug import log
 from .exceptions import *
 
+
 # search publications where research_orgs.id="grid.214458.e"
 #     return research_orgs limit 1
 #
@@ -37,7 +38,6 @@ from .exceptions import *
 # "total_count":225580
 # }
 # }
-
 
 class Organization(DimensionsCore):
     _attributes = ['acronym', 'city', 'city_id', 'country', 'country_code',
@@ -69,9 +69,12 @@ class Organization(DimensionsCore):
     def _fill_record(self, json):
         # Be careful not to invoke "self.x" b/c it causes infinite recursion.
         if __debug__: log('filling object {} using {}', id(self), json)
-        if 'research_orgs' in json and len(json['research_orgs']) > 0:
-            update = object.__getattribute__(self, '_update_attributes')
-            update(json['research_orgs'][0])
+        if 'research_orgs' in json:
+            if len(json['research_orgs']) == 1:
+                update = object.__getattribute__(self, '_update_attributes')
+                update(json['research_orgs'][0])
+            else:
+                raise DataMismatch('Unexpected value in research_orgs')
 
 
     def __repr__(self):

@@ -20,8 +20,23 @@ from .person import Person
 from .organization import Organization
 from .exceptions import *
 
-# search publications where researchers.id="ur.01224076035.43" return researchers
 
+# Example of an item returned in a publication's author_affiliations list:
+#
+# {'current_organization_id': '',
+#  'first_name': 'Stefanie',
+#  'last_name': 'Wehner',
+#  'orcid': '',
+#  'researcher_id': '',
+#  'affiliations': [{'city': 'Munich',
+#                    'city_id': 2867714,
+#                    'country': 'Germany',
+#                    'country_code': 'DE',
+#                    'id': 'grid.419548.5',
+#                    'name': 'Max Planck Institute of Psychiatry',
+#                    'state': None,
+#                    'state_code': None}],
+# },
 
 class Author(Person):
     _attributes = ['affiliations'] + Person._attributes

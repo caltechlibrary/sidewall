@@ -17,6 +17,7 @@ file "LICENSE" for more information.
 from .core import DimensionsCore
 from .exceptions import *
 
+
 class Journal(DimensionsCore):
     _attributes = ['id', 'title'] + DimensionsCore._attributes
 
