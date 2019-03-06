@@ -157,10 +157,8 @@ class Dimensions(Singleton):
 
 
     def query(self, query_string, limit_results = None, fetch_size = _FETCH_SIZE):
-        '''Issue the DSL 'query_string' to Dimensions and return a tuple, where
-        the tuple has the form (total, iterator).  The first value of the tuple
-        is the total number of results, and the second value of the tuple is
-        an iterator to get the results.  Each item will be an object such as
+        '''Issue the DSL 'query_string' to Dimensions and return an iterator
+        for the results.  Each item in the results will be an object such as
         Researcher, Publication, etc.  The query string must end in one of
         the types recognized by Sidewall.
         '''
@@ -210,7 +208,8 @@ class Dimensions(Singleton):
 
 
     def _post(self, query, retry = 1):
-        '''Post the 'query' to the server and return the result as a dict.'''
+        '''Post the 'query' to the server and return the result as a dict.
+        '''
         if __debug__: log("posting query to server: '{}'", query)
         headers = {'Authorization': "JWT " + self._dimensions_token}
         (resp, error) = net('post', _DSL_URL, session = self._session,
