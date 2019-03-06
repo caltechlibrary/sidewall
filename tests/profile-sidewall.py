@@ -32,10 +32,10 @@ print('Sending query & building objects.')
 
 pr = cProfile.Profile()
 pr.enable()
-(total, pubs) = dimensions.query('search publications where research_orgs.id = "grid.20861.3d" return publications',
-                                 max_results = 1000)
+results = dimensions.query('search publications where research_orgs.id = "grid.20861.3d" return publications',
+                           limit_results = 1000)
 # Creating list forces all 1000 results to be fetched and Sidewall objects built
-list(pubs)
+list(results)
 pr.disable()
 
 print('Done.')
