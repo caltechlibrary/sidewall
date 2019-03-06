@@ -20,7 +20,7 @@ from .__version__  import __license__, __copyright__
 
 from .exceptions   import *
 from .debug        import set_debug
-from .dimensions   import dimensions
+from .dimensions   import dimensions, queryresults
 
 from .author       import Author
 from .journal      import Journal
