@@ -33,7 +33,6 @@ from .network import network_available, timed_request, net
 from .organization import Organization
 from .publication import Publication
 from .researcher import Researcher
-from .results import queryresults
 from .singleton import Singleton
 
 
