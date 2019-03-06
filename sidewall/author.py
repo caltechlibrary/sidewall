@@ -38,7 +38,9 @@ from .exceptions import *
 # },
 
 class Author(Person):
-    _attributes = ['affiliations'] + Person._attributes
+    _new_attributes = ['affiliations']
+    _attributes = _new_attributes + Person._attributes
+
 
     def _update_attributes(self, data):
         if __debug__: log('updating object {} using {}', id(self), data)
@@ -46,12 +48,14 @@ class Author(Person):
             raise InternalError('Data not in dict format')
         super()._update_attributes(data)
 
+        objattr = lambda attr: object.__getattribute__(self, attr)
         set_objattr = lambda attr, value: object.__setattr__(self, attr, value)
-        set_objattr('affiliations', [])
 
-        if 'affiliations' in data:
-            objattr = lambda attr: object.__getattribute__(self, attr)
+        try:
             affiliations = objattr('affiliations')
+        except:
+            affiliations = []
+        if 'affiliations' in data:
             dimensions = objattr('_dimensions')
             if dimensions:
                 for org in data['affiliations']:
@@ -59,6 +63,7 @@ class Author(Person):
             else:
                 for org in data['affiliations']:
                     affiliations.append(Organization(org, self))
+        set_objattr('affiliations', affiliations)
 
 
     def __repr__(self):

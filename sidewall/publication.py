@@ -35,15 +35,16 @@ from .journal import Journal
 class Publication(DimensionsCore):
     # Note: do NOT add "authors" to the following list.  The "authors" property
     # is something we add, and is not present in Dimensions.
-    _attributes = ['altmetric', 'author_affiliations', 'book_doi',
-                   'book_series_title', 'book_title', 'date', 'date_inserted',
-                   'doi', 'field_citation_ratio', 'id', 'issn', 'issue',
-                   'journal', 'linkout', 'mesh_terms', 'open_access', 'pages',
-                   'pmcid', 'pmid', 'proceedings_title', 'publisher',
-                   'references', 'relative_citation_ratio',
-                   'research_org_country_names', 'research_org_state_names',
-                   'supporting_grant_ids' 'times_cited', 'title', 'type',
-                   'volume', 'year'] + DimensionsCore._attributes
+    _new_attributes = ['altmetric', 'author_affiliations', 'book_doi',
+                       'book_series_title', 'book_title', 'date',
+                       'date_inserted', 'doi', 'field_citation_ratio', 'id',
+                       'issn', 'issue', 'journal', 'linkout', 'mesh_terms',
+                       'open_access', 'pages', 'pmcid', 'pmid',
+                       'proceedings_title', 'publisher', 'references',
+                       'relative_citation_ratio', 'research_org_country_names',
+                       'research_org_state_names', 'supporting_grant_ids',
+                       'times_cited', 'title', 'type', 'volume', 'year']
+    _attributes = _new_attributes + DimensionsCore._attributes
 
 
     def _update_attributes(self, data):
@@ -88,14 +89,15 @@ class Publication(DimensionsCore):
         # Journal is an object.
         set_objattr('journal', Journal(data['journal'], self) if 'journal' in data else '')
 
-        # Affiliations are a list.
-        set_objattr('author_affiliations', [])
+        try:
+            affiliations = objattr('author_affiliations')
+        except:
+            affiliations = []
         if 'author_affiliations' in data:
             # All cases seen so far have been a list containing another list.
             # I don't understand the point of the double list. Let's be cautious.
             if len(data['author_affiliations']) > 1:
                 raise DataMismatch('Affiliations list holds more than one list')
-            affiliations = objattr('author_affiliations')
             dimensions = objattr('_dimensions')
             if dimensions:
                 for a in data['author_affiliations'][0]:
@@ -103,6 +105,7 @@ class Publication(DimensionsCore):
             else:
                 for a in data['author_affiliations'][0]:
                     affiliations.append(Author(a, self))
+        set_objattr('author_affiliations', affiliations)
 
 
     @property

@@ -21,8 +21,8 @@ from .organization import Organization
 
 
 class Person(DimensionsCore):
-    _attributes = ['first_name', 'last_name', 'id', 'orcid',
-                   'current_organization'] + DimensionsCore._attributes
+    _new_attributes = ['first_name', 'last_name', 'id', 'orcid', 'current_organization']
+    _attributes = _new_attributes + DimensionsCore._attributes
 
     _search_tmpl = 'publications where researchers.id="{}" return researchers limit 1'
 
@@ -46,7 +46,6 @@ class Person(DimensionsCore):
         orcid_value = data.get('orcid_id') or data.get('orcid') or ''
         set_objattr('orcid', _normalized_orcid(orcid_value))
 
-        set_objattr('current_organization', '')
         if 'current_organization_id' in data:
             org_id = data.get('current_organization_id')
             dimensions = objattr('_dimensions')
@@ -55,6 +54,8 @@ class Person(DimensionsCore):
             else:
                 org = Organization({'id': org_id}, self)
             set_objattr('current_organization', org)
+        else:
+            set_objattr('current_organization', '')
 
 
     def _fill_record(self, json):

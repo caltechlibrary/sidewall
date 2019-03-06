@@ -34,7 +34,9 @@ from .person import Person
 #                                    ]}]
 
 class Researcher(Person):
-    _attributes = ['affiliations'] + Person._attributes
+    _new_attributes = ['affiliations']
+    _attributes = _new_attributes + Person._attributes
+
 
     def __init__(self, data):
         if isinstance(data, Author):
@@ -42,6 +44,8 @@ class Researcher(Person):
             # and we want to fill it out to create a Researcher object.
             if __debug__: log('converting Author {} to Researcher', id(data))
             super().__init__(data._json_data, creator = data)
+            for attr in object.__getattribute__(self, '_new_attributes'):
+                setattr(self, attr, getattr(data, attr))
         else:
             # This is a standard initialization, not a case of upconverting.
             super().__init__(data)
@@ -53,12 +57,14 @@ class Researcher(Person):
             raise InternalError('Data not in dict format')
         super()._update_attributes(data)
 
+        objattr = lambda attr: object.__getattribute__(self, attr)
         set_objattr = lambda attr, value: object.__setattr__(self, attr, value)
-        set_objattr('affiliations', [])
 
-        if 'research_orgs' in data:
-            objattr = lambda attr: object.__getattribute__(self, attr)
+        try:
             affiliations = objattr('affiliations')
+        except:
+            affiliations = []
+        if 'research_orgs' in data:
             dimensions = objattr('_dimensions')
             if dimensions:
                 for org_id in data['research_orgs']:
@@ -66,6 +72,7 @@ class Researcher(Person):
             else:
                 for org_id in data['research_orgs']:
                     affiliations.append(Organization({'id': org_id}, self))
+        set_objattr('affiliations', affiliations)
 
 
     def _fill_record(self, json):
