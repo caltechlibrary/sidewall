@@ -11,6 +11,26 @@ _Sidewall_ is a package for interacting with the [Dimensions](https://app.dimens
 [![Python](https://img.shields.io/badge/Python-3.5+-brightgreen.svg?style=flat-square)](http://shields.io)
 [![Latest version](https://img.shields.io/badge/Latest_version-0.0.1-b44e88.svg?style=flat-square)](http://shields.io)
 
+
+Table of Contents
+-----------------
+
+* [Introduction](#-introduction)
+* [Installation instructions](#-installation-instructions)
+* [Using Sidewall](#︎-using-sidewall)
+   * [Basic setup and use](#basic-setup-and-use)
+   * [Basic principles of running queries](#basic-principles-of-running-queries)
+   * [Data mappings](#data-mappings)
+      * [`Person`](#person), with subclasses `Authors` and `Researchers`
+      * [`Organization`](#organization)
+      * [`Publication`](#publication)
+      * [`Journal`](#journal)
+      * [`Grant`](#grant)
+* [Getting help and support](#-getting-help-and-support)
+* [Acknowledgments](#︎-acknowledgments)
+* [Copyright and license](#︎-copyright-and-license)
+
+
 ☀ Introduction
 -----------------------------
 
@@ -119,7 +139,7 @@ The following data classes are defined by Sidewall at this time; note that this 
 * `Journal`
 
 
-**_Person_**
+#### `Person`
 
 Dimensions doesn't expose an underlying base class for people; instead, it returns unnamed data structures that basically refer to people in different contexts.  Sidewall currently understands two such contexts: authors of publications (when a query uses `return publications`), and "researchers" (when a query uses `return researchers`).  Sidewall introduces a parent class called `Person` because the objects in these two contexts are so similar, and provides two derived classes: `Author` and `Researcher`.  Both of the derived classes have the same fields.  The distinction provided by the derived classes is necessary because **the list of affiliations for an `Author` is relative to a particular publication and may not be all the affiliations that a person has**.  Thus, affiliations for authors must be understood in the context of a particular search for publications.  The use of two classes indicates the context, so that callers can correctly interpret the list of affiliations.
 
@@ -169,7 +189,7 @@ To make data access more uniform, Sidewall also replaces the field `current_orga
 ```
 
 
-**_Organization_**
+#### `Organization`
 
 Sidewall uses the object class `Organization` to represent an organization in results returned by Dimensions.  In Sidewall, the set of fields possessed by an `Organization` is the union of all fields that Dimensions provides in different contexts for organizations.  The following table describes the fields and how they relate to values returned from Dimensions:
 
@@ -189,7 +209,7 @@ Sidewall uses the object class `Organization` to represent an organization in re
 Dimensions returns different field values in different contexts.  For example, the information about organizations included in an author's affiliation list in a publication is somewhat different from what is provided if a search ending in `return research_orgs` is used.  Sidewall makes the assumption that an organization with a given organization identifier ("grid id") is the same organization no matter the context in which it is mentioned in a search result, and so Sidewall smooths over the field differences and, as with `Researcher` and `Author`, queries Dimensions behind the scenes to get missing values when it can (and when they exist).
 
 
-**_Publication_**
+#### `Publication`
 
 The `Publication` object class is mostly unchanged from the Dimensions publication entity, but in Dimensions, different fields are exposed depending on the type of publication and whether fieldset modifiers are being used.  (The available fieldsets for publications are `basics`, `extras`, and `book`.)  Sidewall's `Publication` object class contains all possible fields, but the values of some fields may not be filled in depending on the type of publication in question.  For example, journals will not have a value for `book_doi`.  The following table describes the fields in `Publication` objects:
 
@@ -232,7 +252,7 @@ The `Publication` object class is mostly unchanged from the Dimensions publicati
 Sidewall's `Publication` objects use a list of `Author` objects to represent authors, and introduce an alias called `authors` for the field `author_affiliations`.  The latter alias is for convenience and an attempt to bring more intuitiveness to the structure of publications records.  (The name `author_affiliations` in the Dimensions data is potentially confusing because the name suggests it may be a list of organizations rather than a list of authors.  Providing a field named `authors` removes this ambiguity.)
 
 
-**_Journal_**
+#### `Journal`
 
 The `Journal` object class is simple.  It is a direct mapping to the JSON data object that Dimensions returns as the value of a publication's `journal` field.
 
@@ -241,6 +261,10 @@ The `Journal` object class is simple.  It is a direct mapping to the JSON data o
 | id    | str  | ✓                         |
 | title | str  | ✓                         |
 
+
+#### `Grant`
+
+... FORTHCOMING ...
 
 
 ⁇ Getting help and support
