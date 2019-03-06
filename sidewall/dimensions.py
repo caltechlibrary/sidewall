@@ -30,10 +30,11 @@ if sys.platform.startswith('win'):
 from .debug import log
 from .exceptions import *
 from .network import network_available, timed_request, net
-from .singleton import Singleton
+from .organization import Organization
 from .publication import Publication
 from .researcher import Researcher
-from .organization import Organization
+from .results import queryresults
+from .singleton import Singleton
 
 
 # Type definitions
@@ -156,30 +157,30 @@ class Dimensions(Singleton):
             return data
 
 
-    def query(self, query, max_results = None):
-        '''Issue the DSL 'query' to Dimensions and return a tuple, where the
-        tuple has the form (total, iterator).  The first value of the tuple
+    def query(self, query_string, limit_results = None):
+        '''Issue the DSL 'query_string' to Dimensions and return a tuple, where
+        the tuple has the form (total, iterator).  The first value of the tuple
         is the total number of results, and the second value of the tuple is
         an iterator to get the results.  Each item will be an object such as
         Researcher, Publication, etc.  The query string must end in one of
         the types recognized by Sidewall.
         '''
-        result_type = self._result_type(query)
+        result_type = self._result_type(query_string)
         if not result_type:
             txt = 'Unsupported result type -- can only handle "{}"'
             raise RequestError(txt.format('", "'.join(_KNOWN_RESULT_TYPES) + '.'))
 
         # Remove result limits in the query because we need to handle that.
-        if re.search(r'limit\s+[0-9]+(\s+skip\s+[0-9]+)?', query):
-            query = re.sub(r'limit\s+[0-9]+(\s+skip\s+[0-9]+)?', '', query).strip()
+        if re.search(r'limit\s+[0-9]+(\s+skip\s+[0-9]+)?', query_string):
+            query = re.sub(r'limit\s+[0-9]+(\s+skip\s+[0-9]+)?', '', query_string).strip()
 
         # Prepare the first query to get the first set of results.
-        if max_results and max_results < _FETCH_SIZE:
-            fetch_size = max_results
+        if limit_results and limit_results < _FETCH_SIZE:
+            fetch_size = limit_results
         else:
             fetch_size = _FETCH_SIZE
-        base_query = self._expanded_query(query)
-        first_query = base_query + ' limit ' + str(fetch_size)
+        expanded_query = self._expanded_query(query_string)
+        first_query = expanded_query + ' limit ' + str(fetch_size)
 
         # Need run the first query here, to get the total_count.
         data = self._post(first_query)
@@ -198,12 +199,13 @@ class Dimensions(Singleton):
             return []
         else:
             if __debug__: log('query produced {}', total)
-            if max_results:
-               if __debug__: log('will keep to max_results {}', max_results)
-               total = max_results
+            if limit_results:
+               if __debug__: log('will keep to limit_results {}', limit_results)
+               total = limit_results
 
         # Hand off results processing and query iteration to the iterator.
-        return (total, self._iterator(base_query, data, result_type, fetch_size, total))
+        return queryresults(self, query_string, expanded_query, limit_results,
+                            total, data, result_type, fetch_size)
 
 
     def _post(self, query, retry = 1):
@@ -231,26 +233,6 @@ class Dimensions(Singleton):
             raise error
         else:
             return resp.json()
-
-
-    def _iterator(self, base_query, initial_data, result_type, fetch_size, total):
-        skip = 0
-        data = initial_data
-        obj  = _KNOWN_RESULT_TYPES[result_type].objclass
-        while skip < total:
-            for record in data[result_type]:
-                obj_id = record['id']
-                if obj_id in self._cache:
-                    if __debug__: log('returning cached copy of {}', obj_id)
-                    yield self._cache[obj_id]
-                else:
-                    if __debug__: log('caching {}', obj_id)
-                    new_object = obj(record, creator = self)
-                    self._cache[obj_id] = new_object
-                    yield new_object
-            skip += fetch_size
-            query = base_query + ' limit ' + str(fetch_size) + ' skip ' + str(skip)
-            data = self._post(query)
 
 
     def _credentials(self, user, pswd):
@@ -343,10 +325,61 @@ class Dimensions(Singleton):
                 pass
         return text
 
+
+class queryresults(object):
+    '''Results of a Dimensions query executed by Sidewall.  Instances of this
+    class behave like iterators. They also have the following additional
+    properties:
+
+    * query: the original query string issued to dimensions.query(...)
+    * max_results: the limit on number of results set in the original query
+    * total_results: the number of results returned by Dimensions
+    '''
+
+    # Fixme: prevent callers from calling this themselves
+    def __init__(self, dim, orig_query, expanded_query, limit_results, total,
+                 initial_data, result_type, fetch_size):
+        if not isinstance(dim, Dimensions):
+            raise TypeError('First argument must be a Dimensions object')
+        self._dimensions       = dim
+        self._expanded_query   = expanded_query
+        self._initial_data     = initial_data
+        self._result_type      = result_type
+        self._fetch_size       = fetch_size
+        self.query             = orig_query
+        self.total_count       = total
+        self.limit_results     = limit_results
+
+
+    def __len__(self):
+        return self.total_count
+
+
+    def __iter__(self):
+        skip = 0
+        data = self._initial_data
+        obj  = _KNOWN_RESULT_TYPES[self._result_type].objclass
+        while skip < self.total_count:
+            for record in data[self._result_type]:
+                obj_id = record['id']
+                if obj_id in self._dimensions._cache:
+                    if __debug__: log('returning cached copy of {}', obj_id)
+                    yield self._dimensions._cache[obj_id]
+                else:
+                    if __debug__: log('caching {}', obj_id)
+                    new_object = obj(record, creator = self._dimensions)
+                    self._dimensions._cache[obj_id] = new_object
+                    yield new_object
+            skip += self._fetch_size
+            query = (self._expanded_query + ' limit ' + str(self._fetch_size)
+                     + ' skip ' + str(skip))
+            data = self._dimensions._post(query)
+        raise StopIteration
+
 
-# MAIN entry point.
+# Main entry point.
 # .............................................................................
-# The following instantiates the class and expose the interface as "dimensions".
+# The following instantiates the class & exposes the interface as "dimensions".
 # Callers can do things like "dimensions.login()" and "dimensions.search()"
 
 try:
