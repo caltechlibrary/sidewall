@@ -300,7 +300,7 @@ class Dimensions(Singleton):
             return self._cache[obj_id]
         if __debug__: log('creating new {}', cls)
         new_obj = cls(data, creator = creator, dimensions_obj = self)
-        if __debug__: log('new {} object is {}', cls, id(new_obj))
+        if __debug__: log('object {} has {}', id(new_obj), cls)
         if obj_id:
             self._cache[obj_id] = new_obj
         return new_obj
