@@ -191,7 +191,6 @@ def net(get_or_post, url, session = None, polling = False, recursing = 0, **kwar
     elif code in [500, 501, 502, 506, 507, 508]:
         error = ServiceFailure('Internal server error (HTTP code {})'.format(code))
     elif not (200 <= code < 400):
-        import pdb; pdb.set_trace()
         error = NetworkFailure("Unable to resolve {}".format(url))
     return (req, error)
 
