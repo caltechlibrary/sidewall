@@ -28,9 +28,10 @@ class DimensionsCore(object):
 
     def __init__(self, json, creator = None, dimensions_obj = None):
         self._json_data = json          # A dict.
-        self._searched = set()          # Attributes we have searched for.
+        self._searched = set({'id'})    # Attributes we have searched for.
         self._hash = None
         self._dimensions = None
+        self._attributes_updated = False
 
         if dimensions_obj:
             self._dimensions = dimensions_obj
@@ -39,32 +40,29 @@ class DimensionsCore(object):
         elif creator:
             self._dimensions = creator
 
-        try:
-            self._update_attributes(json)
-        except KeyError as err:
-            raise DataMismatch('Incomplete response from Dimensions')
-
-
-    def _update_attributes(self, json):
-        '''Method stub for subclasses to override.'''
-        pass
+        # Try to set the id here, since all Dimensions objects seem to have one.
+        # The remaining attributes are set in a lazy way via __getattr__.
+        dim_id = json.get('id') or json.get('researcher_id') or ''
+        object.__setattr__(self, 'id', dim_id)
+        if __debug__: log('object {} has Dimensions id "{}"', id(self), dim_id)
 
 
     def __getattr__(self, attr):
+        # Implements lazy filling in of attribute values.  Note that Python
+        # calls __getattr__ on attribute lookups where the attribute is not
+        # yet defined on an object.  Thus, the logic below assumes that the
+        # attribute doesn't exist yet on this object.
+
         # Be careful not to invoke "self.x" b/c it causes infinite recursion.
         # Make every attribute lookup use object.__getattribute__.
         objattr = lambda attr: object.__getattribute__(self, attr)
         set_objattr = lambda attr, value: object.__setattr__(self, attr, value)
 
-        if attr in objattr('_attributes'):
-            existing_attrs = objattr('__dict__')
-            if attr not in existing_attrs:
-                json = objattr('_json_data')
-                if attr in json:
-                    if __debug__: log('setting "{}" on object {}', attr, id(self))
-                    value = self._json_data.get(attr)
-                    set_objattr(attr, value)
-                    return value
+        if attr in objattr('_attributes') and not objattr('_attributes_updated'):
+            if __debug__: log('lookup of {} on {} triggering update', attr, id(self))
+            set_objattr('_attributes_updated', True)
+            updater = objattr('_update_attributes')
+            updater(objattr('_json_data'))
         return objattr(attr)
 
 
@@ -109,6 +107,11 @@ class DimensionsCore(object):
                     except:
                         pass
         return objattr(attr)
+
+
+    def _update_attributes(self, json):
+        '''Method stub for subclasses to override.'''
+        pass
 
 
     def __repr__(self):
