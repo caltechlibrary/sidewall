@@ -32,13 +32,15 @@ from .debug import log
 class DimensionsCore(object):
     _attributes = []
 
-    def __init__(self, json, creator = None):
+    def __init__(self, json, creator = None, dimensions_obj = None):
         self._json_data = json          # A dict.
         self._searched = set()          # Attributes we have searched for.
         self._hash = None
         self._dimensions = None
 
-        if isinstance(creator, DimensionsCore):
+        if dimensions_obj:
+            self._dimensions = dimensions_obj
+        elif isinstance(creator, DimensionsCore):
             self._dimensions = creator._dimensions
         elif creator:
             self._dimensions = creator

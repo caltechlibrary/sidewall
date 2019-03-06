@@ -299,10 +299,11 @@ class Dimensions(Singleton):
             if __debug__: log('returning cached object for "{}"', obj_id)
             return self._cache[obj_id]
         if __debug__: log('creating new {}', cls)
-        obj = cls(data, creator = creator)
+        new_obj = cls(data, creator = creator, dimensions_obj = self)
+        if __debug__: log('new {} object is {}', cls, id(new_obj))
         if obj_id:
-            self._cache[obj_id] = obj
-        return obj
+            self._cache[obj_id] = new_obj
+        return new_obj
 
 
     def cache_stats(self):
