@@ -1,5 +1,6 @@
 keyring>=15.0.0
-validators>=0.12.3
-urllib3>=1.24.1
 requests>=2.21.0
 requests_cache>=0.4
+setuptools==40.6.3
+urllib3>=1.24.1
+validators>=0.12.3
