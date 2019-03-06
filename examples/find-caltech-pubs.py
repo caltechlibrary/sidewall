@@ -26,8 +26,8 @@ if len(sys.argv) > 1 and sys.argv[1] == '-d':
 dimensions.login()
 
 print('sending query to Dimensions')
-(total, pubs) = dimensions.query('search publications where research_orgs.id = "grid.20861.3d" return publications')
-print('got back {} publications'.format(total))
+pubs = dimensions.query('search publications where research_orgs.id = "grid.20861.3d" return publications')
+print('got back {} publications'.format(len(pubs)))
 
 for p in pubs:
     print('({}) {} - {}'.format(p.year, p.doi, p.title), )

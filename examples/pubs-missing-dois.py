@@ -26,8 +26,8 @@ if len(sys.argv) > 1 and sys.argv[1] == '-d':
 dimensions.login()
 
 print('sending query to Dimensions')
-(total, pubs) = dimensions.query('search publications in title_abstract_only for "SBML" return publications')
-print('got back {} publications'.format(total))
+pubs = dimensions.query('search publications in title_abstract_only for "SBML" return publications')
+print('got back {} publications'.format(len(pubs)))
 
 print('SBML publications missing DOIs:')
 for p in pubs:

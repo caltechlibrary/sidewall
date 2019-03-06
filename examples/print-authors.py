@@ -26,10 +26,10 @@ if len(sys.argv) > 1 and sys.argv[1] == '-d':
 dimensions.login()
 
 print('sending query to Dimensions')
-(total, pubs) = dimensions.query('search publications in title_only for "SBML" where year=2003 return publications')
-print('got back {} publications'.format(total))
+results = dimensions.query('search publications in title_only for "SBML" where year=2003 return publications')
+print('got back {} publications'.format(len(results)))
 
-for p in pubs:
+for p in results:
     print('-'*70)
     print('{}'.format(p.title))
     for a in p.authors:
