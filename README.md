@@ -1,7 +1,7 @@
-Sidewall<img width="25%" align="right" src=".graphics/tire-sidewall-wikipedia.svg">
+Sidewall<img width="24%" align="right" src=".graphics/tire-sidewall-wikipedia.svg">
 =============
 
-_Sidewall_ is a Python package for interacting with the [Dimensions](https://app.dimensions.ai) search API.  It defines object classes for various Dimensions entity types, fetches data incrementally, caches results, copes with rate limits, and more, to make working with Dimensions more natural for Python programmers.
+_Sidewall_ is a package for interacting with the [Dimensions](https://app.dimensions.ai) search API.  It provides object classes for Dimensions entities, fetches data incrementally, caches results, copes with rate limits, and more, to make working with Dimensions in Python more natural.  "Sidewall" is a loose acronym for _**Si**mple **D**im**e**nsions **w**r**a**pper c**l**ient **l**ibrary_.
 
 *Authors*:      [Michael Hucka](http://github.com/mhucka)<br>
 *Repository*:   [https://github.com/caltechlibrary/sidewall](https://github.com/caltechlibrary/sidewall)<br>
@@ -14,15 +14,13 @@ _Sidewall_ is a Python package for interacting with the [Dimensions](https://app
 ☀ Introduction
 -----------------------------
 
-[Dimensions](https://app.dimensions.ai) offers a networked API and search language (the [DSL](https://docs.dimensions.ai/dsl/language.html)).  However, there is as yet no object-oriented API library for Python.  Interacting with the DSL currently requires sending a search string to the Dimensions server, then interpreting the JSON results and handling various issues such as iterating to obtain more than 1000 values (which requires the use of multiple queries), staying within API rate limits, and more.  _Sidewall_ provides a higher-level interface for working more conveniently with the Dimensions DSL and network API.  Features of Sidewall include:
+[Dimensions](https://app.dimensions.ai) offers a networked API and search language (the [DSL](https://docs.dimensions.ai/dsl/language.html)).  However, interacting with the DSL currently requires sending a search string to the Dimensions server, then interpreting the JSON results and handling various issues such as iterating to obtain more than 1000 values (which requires the use of multiple queries), staying within API rate limits, and more.  _Sidewall_ ("**Si**mple **D**im**e**nsions **w**r**a**pper c**l**ient **l**ibrary") provides a higher-level interface for working more conveniently with the Dimensions DSL and network API.  Features of Sidewall include:
 
-* object classes defined for different Dimensions data entities
-* object attribute values filled in automatically behind the scenes
-* lists returned as efficient generators that fetch data over the net as needed
+* object classes for different Dimensions data entities
+* lazy object values filled in automatically behind the scenes
+* results iterator fetches data over the net as needed
 * automatic caching of search results for speed and efficiency
 * automatic throttling to keep within API rate limits
-
-"Sidewall" is a loose acronym for _**Si**mple **D**im**e**nsions **w**r**a**pper c**l**ient **l**ibrary_.
 
 ✺ Installation instructions
 ---------------------------
@@ -60,13 +58,7 @@ In case of problems, it may be useful to turn on debugging in Sidewall to see ev
 sidewall.set_debug(True)
 ```
 
-To run queries, you will need first to have an [account with Dimensions](https://plus.dimensions.ai/support/solutions/articles/23000013103-how-can-i-get-an-individual-login-for-dimensions-and-what-can-i-do-with-this-).  There are multiple ways of supplying user credentials to Sidewall.  The simplest and most direct is to supply a user name and password to the `login()` method:
-
-```python
-dimensions.login(username = 'somelogin', password = 'somepassword')
-```
-
-However, a more secure and more convenient way is to invoke the `login()` method without any arguments:
+To run queries, you will need first to have an [account with Dimensions](https://plus.dimensions.ai/support/solutions/articles/23000013103-how-can-i-get-an-individual-login-for-dimensions-and-what-can-i-do-with-this-).  There are multiple ways of supplying user credentials to Sidewall.  The most secure and more convenient way is to invoke the `login()` method without any arguments:
 
 ```python
 dimensions.login()
@@ -74,18 +66,24 @@ dimensions.login()
 
 When done this way, Sidewall will use the operating system's keyring/keychain functionality to get the user name and password.  If the information does not exist from a previous call to `dimensions.login()`, Sidewall will ask you for the user name and password interactively, and then store it in the keyring/keychain for next time.
 
+If asking the user for credentials interactively on the command line is unsuitable for the application you are writing, you can also supply a user name and password to the `login()` method as keyword arguments:
+
+```python
+dimensions.login(username = 'somelogin', password = 'somepassword')
+```
+
 
 ### Basic principles of running queries
 
-Sidewall defines a method, `query()`, which you can use to run a search in Dimensions and get back a list of data objects.  The method takes a single argument, a string.  Here is an example:
+Sidewall defines a method, `query()`, which you can use to run a search in Dimensions and get back results.  The method takes a single argument, a string.  Here is an example:
 
 ```python
-(total, records) = dimensions.query('search publications for "SBML" return publications')
+results = dimensions.query('search publications for "SBML" return publications')
 ```
 
-The form of the search query string that Sidewall can use is limited in ways described shortly.  The `query()` method returns multiple values: an integer representing the total number of results returned by the query, and the results themselves.  The latter is in the form of a Python generator so that you iterate over the results or do other operations like a typical Python data generator.
+The form of the search query string that Sidewall can use is limited in ways described shortly.  The `query()` method returns a Python iterator object so that you iterate over the results, taken the `len()`, and do other typical operations.
 
-The objects returned by the generator will be Sidewall objects of the kind discussed in the section below on [Data mappings]().  The specific classes of objects returned will correspond to the type of record expressed in the tail end of the query handed to `query()`.  For example, a query that ends in `return publications` will produce Sidewall `Publications` objects; a query that ends in `return researchers` will produce Sidewall `Researcher` objects; and so on.
+The items returned by the iterator will be Sidewall objects of the kind discussed in the section below on [Data mappings]().  The specific classes of objects returned will correspond to the type of record expressed in the tail end of the query handed to `query()`.  For example, a query that ends in `return publications` will produce Sidewall `Publications` objects; a query that ends in `return researchers` will produce Sidewall `Researcher` objects; and so on.
 
 Sidewall currently puts the following limitations on the form of the query search string:
 * it must begin with `search`
@@ -101,11 +99,11 @@ import sidewall
 from sidewall import dimensions
 
 dimensions.login()
-(total, records) = dimensions.query('search publications for "SBML" return publications')
+results = dimensions.query('search publications for "SBML" return publications')
 
-print('Total found: {}'.format(total))
-for r in records:
-    print('{}: {}'.format(r.year, r.doi))
+print('Total found: {}'.format(len(results)))
+for pub in results:
+    print('{}: {}'.format(pub.year, pub.doi))
 ```
 
 
@@ -157,9 +155,9 @@ To make data access more uniform, Sidewall also replaces the field `current_orga
 >>> import sidewall
 >>> from sidewall import dimensions, Researcher
 >>> dimensions.login()
->>> (_, pubs) = dimensions.query('search publications in title_only for "SBML" where year=2003 return publications')
->>> pub = next(pubs)
->>> author1 = pub.authors[0]
+>>> results = dimensions.query('search publications in title_only for "SBML" where year=2003 return publications')
+>>> pub1 = next(results)
+>>> author1 = pub1.authors[0]
 >>> author1
 <Author ur.0665132124.52: 'M. Hucka'>
 >>> author1.affiliations
