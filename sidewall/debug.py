@@ -46,6 +46,7 @@ def set_debug(enabled):
     if __debug__:
         from logging import DEBUG, WARNING
         logging.getLogger('sidewall').setLevel(DEBUG if enabled else WARNING)
+        global sidewall_debugging
         sidewall_debugging = True
 
 
@@ -56,6 +57,7 @@ def log(s, *other_args):
         # This test for the level may seem redundant, but it's not: it prevents
         # the string format from always being performed if logging is not
         # turned on and the user isn't running Python with -O.
+        global sidewall_debugging
         if sidewall_debugging:
             func = inspect.currentframe().f_back.f_code.co_name
             path = inspect.currentframe().f_back.f_code.co_filename
