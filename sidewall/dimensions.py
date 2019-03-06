@@ -156,7 +156,7 @@ class Dimensions(Singleton):
             return data
 
 
-    def query(self, query_string, limit_results = None):
+    def query(self, query_string, limit_results = None, fetch_size = _FETCH_SIZE):
         '''Issue the DSL 'query_string' to Dimensions and return a tuple, where
         the tuple has the form (total, iterator).  The first value of the tuple
         is the total number of results, and the second value of the tuple is
@@ -178,10 +178,8 @@ class Dimensions(Singleton):
             query = re.sub(r'limit\s+[0-9]+(\s+skip\s+[0-9]+)?', '', query_string).strip()
 
         # Prepare the first query to get the first set of results.
-        if limit_results and limit_results < _FETCH_SIZE:
+        if limit_results and limit_results < fetch_size:
             fetch_size = limit_results
-        else:
-            fetch_size = _FETCH_SIZE
         expanded_query = self._expanded_query(query_string)
         first_query = expanded_query + ' limit ' + str(fetch_size)
 
