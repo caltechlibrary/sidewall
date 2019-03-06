@@ -23,12 +23,6 @@ from .debug import log
 # Classes
 # .............................................................................
 
-# if json is not None:
-#     if '_stats' in json and 'total_count' in json['_stats']:
-#         self._total_count = json['_stats']['total_count']
-#     else:
-#         raise DataMismatch('Missing value in Dimensions JSON')
-
 class DimensionsCore(object):
     _attributes = []
 
