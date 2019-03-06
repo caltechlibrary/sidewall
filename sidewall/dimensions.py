@@ -14,7 +14,7 @@ open-source software released under a 3-clause BSD license.  Please see the
 file "LICENSE" for more information.
 '''
 
-from   collections import Iterable, namedtuple
+from   collections import Iterable, Iterator, namedtuple
 import getpass
 import json as jsonlib
 import keyring
@@ -164,6 +164,10 @@ class Dimensions(Singleton):
         Researcher, Publication, etc.  The query string must end in one of
         the types recognized by Sidewall.
         '''
+
+        # Begin with some sanity checks
+        if not query_string.startswith('search'):
+            raise RequestError('Query must begin with "search"')
         result_type = self._result_type(query_string)
         if not result_type:
             txt = 'Unsupported result type -- can only handle "{}"'
@@ -325,7 +329,7 @@ class Dimensions(Singleton):
         return text
 
 
-class queryresults(object):
+class queryresults(Iterator):
     '''Results of a Dimensions query executed by Sidewall.  Instances of this
     class behave like iterators. They also have the following additional
     properties:
@@ -335,29 +339,29 @@ class queryresults(object):
     * total_results: the number of results returned by Dimensions
     '''
 
-    # Fixme: prevent callers from calling this themselves
     def __init__(self, dim, orig_query, expanded_query, limit_results, total,
                  initial_data, result_type, fetch_size):
         if not isinstance(dim, Dimensions):
             raise TypeError('First argument must be a Dimensions object')
-        self._dimensions       = dim
-        self._expanded_query   = expanded_query
-        self._initial_data     = initial_data
-        self._result_type      = result_type
-        self._fetch_size       = fetch_size
-        self.query             = orig_query
-        self.total_count       = total
-        self.limit_results     = limit_results
+
+        # Attributes we expose
+        self.query           = orig_query
+        self.total_count     = total
+        self.limit_results   = limit_results
+
+        # Internal attributes.
+        self._dimensions     = dim
+        self._expanded_query = expanded_query
+        self._initial_data   = initial_data
+        self._result_type    = result_type
+        self._fetch_size     = fetch_size
+        self._new            = _KNOWN_RESULT_TYPES[result_type].objclass
+        self._iterator       = self._internal_iterator()
 
 
-    def __len__(self):
-        return self.total_count
-
-
-    def __iter__(self):
+    def _internal_iterator(self):
         skip = 0
         data = self._initial_data
-        obj  = _KNOWN_RESULT_TYPES[self._result_type].objclass
         while skip < self.total_count:
             for record in data[self._result_type]:
                 obj_id = record['id']
@@ -366,7 +370,7 @@ class queryresults(object):
                     yield self._dimensions._cache[obj_id]
                 else:
                     if __debug__: log('caching {}', obj_id)
-                    new_object = obj(record, creator = self._dimensions)
+                    new_object = self._new(record, creator = self._dimensions)
                     self._dimensions._cache[obj_id] = new_object
                     yield new_object
             skip += self._fetch_size
@@ -374,6 +378,18 @@ class queryresults(object):
                      + ' skip ' + str(skip))
             data = self._dimensions._post(query)
         raise StopIteration
+
+
+    def __len__(self):
+        return self.total_count
+
+
+    def __iter__(self):
+        return self
+
+
+    def __next__(self):
+        return next(self._iterator)
 
 
 # Main entry point.
