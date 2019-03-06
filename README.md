@@ -278,6 +278,15 @@ If you find an issue, please submit it in [the GitHub issue tracker](https://git
 
 The [vector artwork](https://commons.wikimedia.org/wiki/File:Tire_code_-_en.svg) of a car tire used as a logo for this repository was created by [Flanker](https://commons.wikimedia.org/wiki/User:F_l_a_n_k_e_r).  It is licensed under the Creative Commons [Attribution 3.0 Unported](https://creativecommons.org/licenses/by/3.0/deed.en) license.
 
+Sidewall makes use of numerous open-source packages, without which it would have been effectively impossible to develop Sidewall with the resources we had.  We want to acknowledge this debt.  In alphabetical order, the packages are:
+
+* [keyring](https://github.com/jaraco/keyring) &ndash; access the system keyring service from Python
+* [requests](http://docs.python-requests.org) &ndash; an HTTP library for Python
+* [setuptools](https://github.com/pypa/setuptools) &ndash; library for `setup.py`
+* [urllib3](https://urllib3.readthedocs.io/en/latest/) &ndash; HTTP client library for Python
+* [validators](https://github.com/kvesteri/validators) &ndash; data validation package for Python
+
+
 ☮︎ Copyright and license
 ---------------------
 
