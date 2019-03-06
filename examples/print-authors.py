@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # =============================================================================
 # @file    pubs-missing-dois.py
-# @brief   Example use of Sidewall to print SBML pubs missing DOI
+# @brief   Example use of Sidewall to print authors of the 2003 SBML publication
 # @author  Michael Hucka <mhucka@caltech.edu>
 # @license Please see the file named LICENSE in the project directory
 # @website https://github.com/caltechlibrary/sidewall
