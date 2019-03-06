@@ -334,9 +334,9 @@ class queryresults(Iterator):
     class behave like iterators. They also have the following additional
     properties:
 
-    * query: the original query string issued to dimensions.query(...)
-    * max_results: the limit on number of results set in the original query
-    * total_results: the number of results returned by Dimensions
+     'query': the original query string issued to dimensions.query(...)
+     'limit_results': the limit on number of results set in the original query
+     'total_count': the number of results returned by Dimensions
     '''
 
     def __init__(self, dim, orig_query, expanded_query, limit_results, total,
