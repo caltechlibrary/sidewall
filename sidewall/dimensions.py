@@ -27,6 +27,7 @@ if sys.platform.startswith('win'):
     import keyring.backends
     from keyring.backends.Windows import WinVaultKeyring
 
+from .data_helpers import dimensions_id
 from .debug import log
 from .exceptions import *
 from .network import network_available, timed_request, net
@@ -294,15 +295,15 @@ class Dimensions(Singleton):
 
 
     def factory(self, cls, data, creator):
-        obj_id = data.get('id', '')
-        if obj_id in self._cache:
-            if __debug__: log('returning cached object for "{}"', obj_id)
-            return self._cache[obj_id]
-        if __debug__: log('creating new {}', cls)
+        dim_id = dimensions_id(data)
+        if dim_id in self._cache:
+            if __debug__: log('returning cached object for "{}"', dim_id)
+            return self._cache[dim_id]
+        if __debug__: log('creating new {} for Dimensions object "{}"', cls, dim_id)
         new_obj = cls(data, creator = creator, dimensions_obj = self)
         if __debug__: log('object {} has {}', id(new_obj), cls)
-        if obj_id:
-            self._cache[obj_id] = new_obj
+        if dim_id:
+            self._cache[dim_id] = new_obj
         return new_obj
 
 

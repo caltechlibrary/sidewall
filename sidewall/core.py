@@ -18,6 +18,7 @@ import inspect
 import json as jsonlib
 
 from .debug import log
+from .data_helpers import dimensions_id
 
 
 # Classes
@@ -42,7 +43,7 @@ class DimensionsCore(object):
 
         # Try to set the id here, since all Dimensions objects seem to have one.
         # The remaining attributes are set in a lazy way via __getattr__.
-        dim_id = json.get('id') or json.get('researcher_id') or ''
+        dim_id = dimensions_id(json)
         object.__setattr__(self, 'id', dim_id)
         if __debug__: log('object {} has Dimensions id "{}"', id(self), dim_id)
 
