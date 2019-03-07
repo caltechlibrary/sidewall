@@ -78,7 +78,7 @@ class RateLimit:
 # Decorator function.
 # .............................................................................
 
-def rate_limit(obj = None, *, max_calls = 30, time_limit = 1):
+def rate_limit(obj = None, *, max_calls = 30, time_limit = 60):
     '''Time_limit is in units of seconds.'''
 
     if obj is None:

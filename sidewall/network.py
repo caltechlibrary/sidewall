@@ -49,7 +49,7 @@ _MAX_RETRIES = 5
 '''Maximum number of times we back off and try again.  This also affects the
 maximum wait time that will be reached after repeated retries.'''
 
-_DIMENSIONS_RATE_LIMIT = RateLimit(30, 1)
+_DIMENSIONS_RATE_LIMIT = RateLimit(30, 60)
 '''Rate limit imposed by Dimensions API service.'''
 
 
