@@ -70,13 +70,14 @@ class DimensionsCore(object):
         if not attr in objattr(self, '_attributes'):
             return objattr(self, attr)
         attrib_dict = objattr(self, '__dict__')
-        if not (attr in attrib_dict or objattr(self, '_attributes_expanded')):
+        if attr not in attrib_dict or not objattr(self, '_attributes_expanded'):
             # Attribute has no value, but we haven't expanded all attributes.
-            if __debug__: log('"{}" hasn\'t been set yet', attr)
+            if __debug__: log('"{}" isn\'t set yet on {}', attr, id(self))
             expand_attributes = objattr(self, '_expand_attributes')
             expand_attributes(objattr(self, '_orig_data'))
             set_objattr(self, '_attributes_expanded', True)
-        if not (objattr(self, attr) or attr in objattr(self, '_attributes_done')):
+        if ((attr not in attrib_dict or not objattr(self, attr))
+            and attr not in objattr(self, '_attributes_done')):
             # Attribute still has no value, but we haven't tried searching yet.
             # All the methods for this approach need a Dimensions id.
             dim = objattr(self, '_dimensions')
