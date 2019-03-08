@@ -28,6 +28,21 @@ def set_objattr(obj, attr, value, overwrite = True):
         object.__setattr__(obj, attr, value)
 
 
+# The following is used in methods that pull stuff out of Dimensions results.
+
+def matching_record(json, key, obj_id):
+    if not (json and key in json):
+        return {}
+    # Iterate over the results, matching id's until we find ours.
+    for record in json[key]:
+        if 'id' in record and record['id'] == obj_id:
+            if __debug__: log('found matching record for id "{}"', obj_id)
+            return record
+    else:
+        if __debug__: log('no record found for id "{}"', obj_id)
+        return {}
+
+
 # The following originally came from a posting by user Zero Piraeus here:
 # https://stackoverflow.com/a/25851972/743730
 

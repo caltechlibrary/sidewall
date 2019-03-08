@@ -27,7 +27,7 @@ if sys.platform.startswith('win'):
     import keyring.backends
     from keyring.backends.Windows import WinVaultKeyring
 
-from .data_helpers import dimensions_id, list_diff
+from .data_helpers import dimensions_id, list_diff, matching_record
 from .debug import log
 from .exceptions import *
 from .network import network_available, timed_request, net
@@ -163,7 +163,7 @@ class Dimensions(Singleton):
             if len(result_keys) > 1:
                 raise DataMismatch('Unexpected keys in Dimensions results: {}'
                                    .format(list(data.keys())))
-            return self._matching_record(data, result_keys[0], id)
+            return matching_record(data, result_keys[0], id)
 
 
     def query(self, query_string, limit_results = None, fetch_size = _FETCH_SIZE):
@@ -301,19 +301,6 @@ class Dimensions(Singleton):
             if re.search(stmt, query):
                 return re.sub(stmt, 'return ' + typename + data.elaboration, query)
         return query
-
-
-    def _matching_record(self, json, key, obj_id):
-        if not (json and key in json):
-            return {}
-        # Iterate over the results, matching id's until we find ours.
-        for record in json[key]:
-            if 'id' in record and record['id'] == obj_id:
-                if __debug__: log('found matching record for id "{}"', obj_id)
-                return record
-        else:
-            if __debug__: log('no record found for id "{}"', obj_id)
-            return {}
 
 
     def factory(self, cls, data, creator):
