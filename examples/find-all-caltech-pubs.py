@@ -33,7 +33,11 @@ print('Sending query to Dimensions')
 pubs = dimensions.query('search publications where research_orgs.id = "grid.20861.3d" return publications')
 
 print('Got back {} publications'.format(len(pubs)))
+count = 0
 for p in pubs:
+    count += 1
     author = p.authors[0].last_name + (' et al.' if len(p.authors) > 1 else '')
-    abbrev_title = '"' + p.title[:37] + ('...' if len(p.title) > 37 else '') + '"'
-    print('{} - {:35} {:42} {}'.format(p.year, p.doi, abbrev_title, author))
+    title  = '"' + p.title[:37] + ('...' if len(p.title) > 37 else '') + '"'
+    print('[{:5}] {} - {:35} {:42} {}'.format(count, p.year, p.doi, title, author))
+
+print('Done.')
