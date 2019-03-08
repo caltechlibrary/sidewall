@@ -1,4 +1,4 @@
-#!/usr/bin/env python3 -O
+#!/usr/bin/env python3
 # =============================================================================
 # @file    find-all-caltech-pubs.py
 # @brief   Example use of Sidewall to print a list of all Caltech pubs

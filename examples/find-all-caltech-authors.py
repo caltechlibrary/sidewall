@@ -1,4 +1,4 @@
-#!/usr/bin/env python3 -O
+#!/usr/bin/env python3
 # =============================================================================
 # @file    find-all-caltech-authors.py
 # @brief   Use Sidewall to print authors that have Caltech affiliations
