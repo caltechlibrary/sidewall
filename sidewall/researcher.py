@@ -72,7 +72,7 @@ class Researcher(Person):
     def _fill_record(self, json):
         # Be careful not to invoke "self.x" b/c it causes infinite recursion.
         if __debug__: log('filling object {} using {}', id(self), json)
-        if not objattr(self, 'affiliations') and 'researchers' in json:
+        if 'researchers' in json:
             data = json['researchers'][0]
             if 'research_orgs' not in data or len(data['research_orgs']) == 0:
                 return
