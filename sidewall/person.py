@@ -15,7 +15,7 @@ file "LICENSE" for more information.
 '''
 
 from .core import DimensionsCore
-from .data_helpers import objattr, set_objattr, dimensions_id, matching_record
+from .data_helpers import objattr, set_objattr, dimensions_id
 from .debug import log
 from .exceptions import *
 from .organization import Organization
@@ -55,21 +55,21 @@ class Person(DimensionsCore):
         if __debug__: log('expanding attributes on {} using {}', id(self), data)
         if 'current_organization_id' in data:
             org_id = data.get('current_organization_id')
-            dimensions = objattr(self, '_dimensions')
-            if dimensions:
-                org = dimensions.factory(Organization, {'id': org_id}, self)
-            else:
-                org = Organization({'id': org_id}, self)
-            set_objattr(self, 'current_organization', org)
-        else:
-            set_objattr(self, 'current_organization', '')
+            if org_id:
+                dimensions = objattr(self, '_dimensions')
+                if dimensions:
+                    org = dimensions.factory(Organization, {'id': org_id}, self)
+                else:
+                    org = Organization({'id': org_id}, self)
+                set_objattr(self, 'current_organization', org)
+                return
+        set_objattr(self, 'current_organization', None)
 
 
-    def _fill_record(self, json):
-        if __debug__: log('filling object {} using {}', id(self), json)
+    def _fill_record(self, data):
+        if __debug__: log('filling object {} using {}', id(self), data)
         if objattr(self, 'orcid') and objattr(self, 'current_organization'):
             return
-        data = matching_record(json, 'researchers', objattr(self, 'id'))
         if not objattr(self, 'orcid'):
             if 'orcid_id' in data:
                 set_attributes = objattr(self, '_set_attributes')
