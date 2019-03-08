@@ -15,6 +15,7 @@ file "LICENSE" for more information.
 '''
 
 from .core import DimensionsCore
+from .data_helpers import objattr, set_objattr
 from .debug import log
 from .exceptions import *
 
@@ -40,42 +41,35 @@ from .exceptions import *
 # }
 
 class Organization(DimensionsCore):
-    _attributes = ['acronym', 'city', 'city_id', 'country', 'country_code',
-                   'country_name', 'id', 'name', 'state', 'state_code']
+    _new_attributes = ['acronym', 'city', 'city_id', 'country', 'country_code',
+                       'country_name', 'id', 'name', 'state', 'state_code']
+    _attributes     = _new_attributes + DimensionsCore._attributes
+    _search_tmpl    = 'publications where research_orgs.id="{}" return research_orgs limit 1'
 
-    _search_tmpl = 'publications where research_orgs.id="{}" return research_orgs limit 1'
 
-
-    def _update_attributes(self, data):
-        if __debug__: log('updating object {} using {}', id(self), data)
-        if not isinstance(data, dict):
-            raise InternalError('Data not in dict format')
-        super()._update_attributes(data)
-
-        set_objattr = lambda attr, value: object.__setattr__(self, attr, value)
-
-        set_objattr('acronym',      data.get('acronym', ''))
-        set_objattr('city',         data.get('city', ''))
-        set_objattr('city_id',      data.get('city_id', ''))
-        set_objattr('country',      data.get('country', ''))
-        set_objattr('country_code', data.get('country_code', ''))
-        set_objattr('country_name', data.get('country_name', ''))
-        set_objattr('id',           data.get('id', ''))
-        set_objattr('name',         data.get('name', ''))
-        set_objattr('state',        data.get('state', ''))
-        set_objattr('state_code',   data.get('state_code', ''))
+    def _set_attributes(self, data, overwrite = False):
+        if __debug__: log('setting attributes on {} using {}', id(self), data)
+        set_objattr(self, 'acronym',      data.get('acronym', ''),      overwrite)
+        set_objattr(self, 'city',         data.get('city', ''),         overwrite)
+        set_objattr(self, 'city_id',      data.get('city_id', ''),      overwrite)
+        set_objattr(self, 'country',      data.get('country', ''),      overwrite)
+        set_objattr(self, 'country_code', data.get('country_code', ''), overwrite)
+        set_objattr(self, 'country_name', data.get('country_name', ''), overwrite)
+        set_objattr(self, 'id',           data.get('id', ''),           overwrite)
+        set_objattr(self, 'name',         data.get('name', ''),         overwrite)
+        set_objattr(self, 'state',        data.get('state', ''),        overwrite)
+        set_objattr(self, 'state_code',   data.get('state_code', ''),   overwrite)
 
 
     def _fill_record(self, json):
-        # Be careful not to invoke "self.x" b/c it causes infinite recursion.
         if __debug__: log('filling object {} using {}', id(self), json)
         if 'research_orgs' in json:
             if len(json['research_orgs']) == 1:
-                update = object.__getattribute__(self, '_update_attributes')
-                update(json['research_orgs'][0])
+                set_attributes = objattr(self, '_set_attributes')
+                set_attributes(json['research_orgs'][0], overwrite = False)
             else:
                 raise DataMismatch('Unexpected value in research_orgs')
 
 
     def __repr__(self):
-        return "<Organization {}: '{}'>".format(self.id, self.name)
+        return "<Organization {}>".format(self.id)

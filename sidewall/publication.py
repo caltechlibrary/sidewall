@@ -28,9 +28,11 @@ file "LICENSE" for more information.
 
 from .author import Author
 from .core import DimensionsCore
+from .data_helpers import objattr, set_objattr
 from .debug import log
 from .exceptions import *
 from .journal import Journal
+
 
 class Publication(DimensionsCore):
     # Note: do NOT add "authors" to the following list.  The "authors" property
@@ -47,65 +49,62 @@ class Publication(DimensionsCore):
     _attributes = _new_attributes + DimensionsCore._attributes
 
 
-    def _update_attributes(self, data):
-        if __debug__: log('updating object {} using {}', id(self), data)
-        if not isinstance(data, dict):
-            raise InternalError('Data not in dict format')
-        super()._update_attributes(data)
-
-        objattr = lambda attr: object.__getattribute__(self, attr)
-        set_objattr = lambda attr, value: object.__setattr__(self, attr, value)
-
-        set_objattr('altmetric',                  data.get('altmetric', ''))
-        set_objattr('book_doi',                   data.get('book_doi', ''))
-        set_objattr('book_series_title',          data.get('book_series_title', ''))
-        set_objattr('book_title',                 data.get('book_title', ''))
-        set_objattr('date',                       data.get('date', ''))
-        set_objattr('date_inserted',              data.get('date_inserted', ''))
-        set_objattr('doi',                        data.get('doi', ''))
-        set_objattr('field_citation_ratio',       data.get('field_citation_ratio', ''))
-        set_objattr('id',                         data.get('id', ''))
-        set_objattr('issn',                       data.get('issn', ''))
-        set_objattr('issue',                      data.get('issue', ''))
-        set_objattr('linkout',                    data.get('linkout', ''))
-        set_objattr('mesh_terms',                 data.get('mesh_terms', ''))
-        set_objattr('open_access',                data.get('open_access', ''))
-        set_objattr('pages',                      data.get('pages', ''))
-        set_objattr('pmcid',                      data.get('pmcid', ''))
-        set_objattr('pmid',                       data.get('pmid', ''))
-        set_objattr('proceedings_title',          data.get('proceedings_title', ''))
-        set_objattr('publisher',                  data.get('publisher', ''))
-        set_objattr('references',                 data.get('references', ''))
-        set_objattr('relative_citation_ratio',    data.get('relative_citation_ratio', ''))
-        set_objattr('research_org_country_names', data.get('research_org_country_names', ''))
-        set_objattr('research_org_state_names',   data.get('research_org_state_names', ''))
-        set_objattr('supporting_grant_ids',       data.get('supporting_grant_ids', ''))
-        set_objattr('times_cited',                data.get('times_cited', ''))
-        set_objattr('title',                      data.get('title', ''))
-        set_objattr('type',                       data.get('type', ''))
-        set_objattr('volume',                     data.get('volume', ''))
-        set_objattr('year',                       data.get('year', ''))
+    def _set_attributes(self, data, overwrite = False):
+        if __debug__: log('setting attributes on {} using {}', id(self), data)
+        set_objattr(self, 'altmetric',                  data.get('altmetric', ''), overwrite)
+        set_objattr(self, 'book_doi',                   data.get('book_doi', ''), overwrite)
+        set_objattr(self, 'book_series_title',          data.get('book_series_title', ''), overwrite)
+        set_objattr(self, 'book_title',                 data.get('book_title', ''), overwrite)
+        set_objattr(self, 'date',                       data.get('date', ''), overwrite)
+        set_objattr(self, 'date_inserted',              data.get('date_inserted', ''), overwrite)
+        set_objattr(self, 'doi',                        data.get('doi', ''), overwrite)
+        set_objattr(self, 'field_citation_ratio',       data.get('field_citation_ratio', ''), overwrite)
+        set_objattr(self, 'id',                         data.get('id', ''), overwrite)
+        set_objattr(self, 'issn',                       data.get('issn', ''), overwrite)
+        set_objattr(self, 'issue',                      data.get('issue', ''), overwrite)
+        set_objattr(self, 'linkout',                    data.get('linkout', ''), overwrite)
+        set_objattr(self, 'mesh_terms',                 data.get('mesh_terms', ''), overwrite)
+        set_objattr(self, 'open_access',                data.get('open_access', ''), overwrite)
+        set_objattr(self, 'pages',                      data.get('pages', ''), overwrite)
+        set_objattr(self, 'pmcid',                      data.get('pmcid', ''), overwrite)
+        set_objattr(self, 'pmid',                       data.get('pmid', ''), overwrite)
+        set_objattr(self, 'proceedings_title',          data.get('proceedings_title', ''), overwrite)
+        set_objattr(self, 'publisher',                  data.get('publisher', ''), overwrite)
+        set_objattr(self, 'references',                 data.get('references', ''), overwrite)
+        set_objattr(self, 'relative_citation_ratio',    data.get('relative_citation_ratio', ''), overwrite)
+        set_objattr(self, 'research_org_country_names', data.get('research_org_country_names', ''), overwrite)
+        set_objattr(self, 'research_org_state_names',   data.get('research_org_state_names', ''), overwrite)
+        set_objattr(self, 'supporting_grant_ids',       data.get('supporting_grant_ids', ''), overwrite)
+        set_objattr(self, 'times_cited',                data.get('times_cited', ''), overwrite)
+        set_objattr(self, 'title',                      data.get('title', ''), overwrite)
+        set_objattr(self, 'type',                       data.get('type', ''), overwrite)
+        set_objattr(self, 'volume',                     data.get('volume', ''), overwrite)
+        set_objattr(self, 'year',                       data.get('year', ''), overwrite)
 
         # Journal is an object.
-        set_objattr('journal', Journal(data['journal'], self) if 'journal' in data else '')
+        j = Journal(data['journal'], self) if 'journal' in data else ''
+        set_objattr(self, 'journal', j, overwrite)
 
-        try:
-            affiliations = objattr('author_affiliations')
-        except:
-            affiliations = []
+
+    def _expand_attributes(self, data):
+        if __debug__: log('expanding attributes on {} using {}', id(self), data)
         if 'author_affiliations' in data:
+            try:
+                affiliations = objattr(self, 'author_affiliations')
+            except:
+                affiliations = []
             # All cases seen so far have been a list containing another list.
             # I don't understand the point of the double list. Let's be cautious.
             if len(data['author_affiliations']) > 1:
                 raise DataMismatch('Affiliations list holds more than one list')
-            dimensions = objattr('_dimensions')
+            dimensions = objattr(self, '_dimensions')
             if dimensions:
                 for a in data['author_affiliations'][0]:
                     affiliations.append(dimensions.factory(Author, a, self))
             else:
                 for a in data['author_affiliations'][0]:
                     affiliations.append(Author(a, self))
-        set_objattr('author_affiliations', affiliations)
+            set_objattr(self, 'author_affiliations', affiliations, overwrite = True)
 
 
     @property

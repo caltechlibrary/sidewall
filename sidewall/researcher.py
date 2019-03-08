@@ -15,6 +15,7 @@ file "LICENSE" for more information.
 '''
 
 from .author import Author
+from .data_helpers import objattr, set_objattr
 from .debug import log
 from .exceptions import *
 from .organization import Organization
@@ -44,53 +45,46 @@ class Researcher(Person):
             # and we want to fill it out to create a Researcher object.
             if __debug__: log('converting Author {} to Researcher', id(data))
             super().__init__(data._json_data, creator = data)
-            for attr in object.__getattribute__(self, '_new_attributes'):
+            for attr in objattr(self, '_new_attributes'):
                 setattr(self, attr, getattr(data, attr))
         else:
             # This is a standard initialization, not a case of upconverting.
             super().__init__(data)
 
 
-    def _update_attributes(self, data):
-        if __debug__: log('updating object {} using {}', id(self), data)
-        if not isinstance(data, dict):
-            raise InternalError('Data not in dict format')
-        super()._update_attributes(data)
-
-        objattr = lambda attr: object.__getattribute__(self, attr)
-        set_objattr = lambda attr, value: object.__setattr__(self, attr, value)
-
-        try:
-            affiliations = objattr('affiliations')
-        except:
-            affiliations = []
+    def _expand_attributes(self, data):
+        if __debug__: log('expanding attributes on {} using {}', id(self), data)
         if 'research_orgs' in data:
-            dimensions = objattr('_dimensions')
+            try:
+                affiliations = objattr(self, 'affiliations')
+            except:
+                affiliations = []
+            dimensions = objattr(self, '_dimensions')
             if dimensions:
                 for org_id in data['research_orgs']:
                     affiliations.append(dimensions.factory(Organization, {'id': org_id}, self))
             else:
                 for org_id in data['research_orgs']:
                     affiliations.append(Organization({'id': org_id}, self))
-        set_objattr('affiliations', affiliations)
+            set_objattr(self, 'affiliations', affiliations, overwrite = True)
 
 
     def _fill_record(self, json):
         # Be careful not to invoke "self.x" b/c it causes infinite recursion.
-        objattr = lambda attr: object.__getattribute__(self, attr)
         if __debug__: log('filling object {} using {}', id(self), json)
-        if not objattr('affiliations') and 'researchers' in json:
+        if not objattr(self, 'affiliations') and 'researchers' in json:
             data = json['researchers'][0]
             if 'research_orgs' not in data or len(data['research_orgs']) == 0:
                 return
-            affiliations = objattr('affiliations')
-            dimensions = objattr('_dimensions')
+            affiliations = objattr(self, 'affiliations')
+            dimensions = objattr(self, '_dimensions')
             if dimensions:
                 for org_id in data['research_orgs']:
                     affiliations.append(dimensions.factory(Organization, {'id': org_id}, self))
             else:
                 for org_id in data['research_orgs']:
                     affiliations.append(Organization({'id': org_id}, self))
+            set_objattr(self, 'affiliations', affiliations, overwrite = True)
 
 
     def __repr__(self):

@@ -15,6 +15,8 @@ file "LICENSE" for more information.
 '''
 
 from .core import DimensionsCore
+from .data_helpers import objattr, set_objattr
+from .debug import log
 from .exceptions import *
 
 
@@ -22,12 +24,10 @@ class Journal(DimensionsCore):
     _attributes = ['id', 'title'] + DimensionsCore._attributes
 
 
-    def _update_attributes(self, data):
-        super()._update_attributes(data)
-
-        # https://docs.dimensions.ai/dsl/data.html#data
-        self.title = data.get('title', '')
-        self.id    = data.get('id', '')
+    def _set_attributes(self, data, overwrite = False):
+        if __debug__: log('setting attributes on {} using {}', id(self), data)
+        set_objattr(self, 'id',    data.get('id', ''),    overwrite)
+        set_objattr(self, 'title', data.get('title', ''), overwrite)
 
 
     def __repr__(self):

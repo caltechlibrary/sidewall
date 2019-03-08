@@ -18,21 +18,42 @@ import inspect
 import json as jsonlib
 
 from .debug import log
-from .data_helpers import dimensions_id
+from .data_helpers import dimensions_id, objattr, set_objattr
 
 
 # Classes
 # .............................................................................
+#
+# When an object is first created, the goal is to set only a minimum number
+# of attributes here, and delay calling the _expand_attributes() methods
+# until additional fields are necessary.  The basic scheme is this:
+#
+# - Every class has a _set_attributes() method that sets the scalar attributes.
+#
+# - Classes that have more elaborate attributes (such as lists of other
+#   objects) have the method _expand_attributes().  This gets called by
+#   __getattribute__(), defined below, upon the first time an elaborate
+#   attribute is accessed.  The core object attribute _attributes_expanded is
+#   set by __getattribute__() to mark that the method _expand_attributes()
+#   has been called, so that it's not called again.
+#
+# - Attribute values are not always filled in because the search results from
+#   Dimensions aren't always complete.  In some cases, we have a way to query
+#   Dimensions in a different way to get additional field values.  The logic
+#   for doing the secondary search is also in __getattribute__() below.
 
 class DimensionsCore(object):
     _attributes = []
 
-    def __init__(self, json, creator = None, dimensions_obj = None):
-        self._json_data = json          # A dict.
-        self._searched = set({'id'})    # Attributes we have searched for.
+    def __init__(self, data, creator = None, dimensions_obj = None):
+        if not isinstance(data, dict):
+            raise InternalError('Data not in dict format')
+        self._json_data = data         # A dict.
+        self._search_data = None       # If we search, we store it for debugging
         self._hash = None
         self._dimensions = None
-        self._attributes_updated = False
+        self._attributes_expanded = False
+        self._attributes_done = set()  # Attributes we have finished filling.
 
         if dimensions_obj:
             self._dimensions = dimensions_obj
@@ -41,76 +62,80 @@ class DimensionsCore(object):
         elif creator:
             self._dimensions = creator
 
-        # Try to set the id here, since all Dimensions objects seem to have one.
-        # The remaining attributes are set in a lazy way via __getattr__.
-        dim_id = dimensions_id(json)
-        object.__setattr__(self, 'id', dim_id)
-        if __debug__: log('object {} has Dimensions id "{}"', id(self), dim_id)
-
-
-    def __getattr__(self, attr):
-        # Implements lazy filling in of attribute values.  Note that Python
-        # calls __getattr__ on attribute lookups where the attribute is not
-        # yet defined on an object.  Thus, the logic below assumes that the
-        # attribute doesn't exist yet on this object.
-
-        # Be careful not to invoke "self.x" b/c it causes infinite recursion.
-        # Make every attribute lookup use object.__getattribute__.
-        objattr = lambda attr: object.__getattribute__(self, attr)
-        set_objattr = lambda attr, value: object.__setattr__(self, attr, value)
-
-        if attr in objattr('_attributes') and not objattr('_attributes_updated'):
-            if __debug__: log('lookup of {} on {} triggering update', attr, id(self))
-            set_objattr('_attributes_updated', True)
-            updater = objattr('_update_attributes')
-            updater(objattr('_json_data'))
-        return objattr(attr)
+        self._set_attributes(data, overwrite = True)
+        self._mark_done_attributes()
 
 
     def __getattribute__(self, attr):
-        # Be careful not to invoke "self.x" b/c it causes infinite recursion.
-        # Make every attribute lookup use object.__getattribute__.
-        objattr = lambda attr: object.__getattribute__(self, attr)
-        set_objattr = lambda attr, value: object.__setattr__(self, attr, value)
-
-        if __debug__: log('looking up "{}" on object {}', attr, id(self))
-        if not attr in objattr('_attributes'):
-            raise AttributeError(attr)
-        if not (objattr(attr) or attr in objattr('_searched')):
-            if __debug__: log('"{}" not yet set on object {}', attr, id(self))
-            # Attribute has no value and we haven't tried searching for it.
-            # We now set the flag that we tried, whether we can search or not.
-            searched = objattr('_searched')
-            searched.add(attr)      # Warning: don't combine this w/ next line.
-            set_objattr('_searched', searched)
+        if not attr in objattr(self, '_attributes'):
+            return objattr(self, attr)
+        attrib_dict = objattr(self, '__dict__')
+        if not (attr in attrib_dict or objattr(self, '_attributes_expanded')):
+            # Attribute has no value, but we haven't expanded all attributes.
+            if __debug__: log('"{}" hasn\'t been set yet', attr)
+            expand_attributes = objattr(self, '_expand_attributes')
+            expand_attributes(objattr(self, '_json_data'))
+            set_objattr(self, '_attributes_expanded', True)
+        if not (objattr(self, attr) or attr in objattr(self, '_attributes_done')):
+            # Attribute still has no value, but we haven't tried searching yet.
             # All the methods for this approach need a Dimensions id.
-            dim_id = objattr('id')
-            if not dim_id:
-                if __debug__: log("missing id -- can't search for \"{}\"", attr)
-                return objattr(attr)
-            try:
-                # If we know of a way to expand values on this object, there
-                # will be a class attribute providing a search template.
-                search_tmpl = objattr('_search_tmpl')
-            except:
-                if __debug__: log("no search template -- can't fill in values")
+            dim_id = objattr(self, 'id')
+            if dim_id:
+                if __debug__: log('still missing value for "{}" on {}', attr, id(self))
+                try:
+                    # If we know of a way to expand values on this object, there
+                    # will be a class attribute providing a search template.
+                    search_tmpl = objattr(self, '_search_tmpl')
+                except:
+                    if __debug__: log("no search template -- can't fill in values")
+                else:
+                    dim = objattr(self, '_dimensions')
+                    if dim:
+                        search = objattr(dim, 'record_search')
+                        search_results = search(search_tmpl, dim_id)
+                        # Save what we got back in case we need to debug things.
+                        set_objattr(self, '_search_data', search_results)
+                        # Subclasses may have their own _fill_record.  Look for all.
+                        classes = inspect.getmro(self.__class__)
+                        for c in classes[:-1]:  # Skip class 'object'.
+                            try:
+                                fill_record = objattr(c, '_fill_record')
+                                fill_record(self, search_results)
+                            except:
+                                pass
             else:
-                dim = objattr('_dimensions')
-                search = object.__getattribute__(dim, 'record_search')
-                record_json = search(search_tmpl, dim_id)
-                # Subclasses may have their own _fill_record.  Look for all.
-                classes = inspect.getmro(self.__class__)
-                for c in classes[:-1]:  # Skip class 'object'.
-                    try:
-                        fill_record = object.__getattribute__(c, '_fill_record')
-                        if __debug__: log('using _fill_record on {}', str(c))
-                        fill_record(self, record_json)
-                    except:
-                        pass
-        return objattr(attr)
+                if __debug__: log("missing id -- can't search for \"{}\"", attr)
+            # We now set the flag that we tried, whether we can search or not.
+            mark_done = objattr(self, '_mark_done')
+            mark_done(attr)
+        value = objattr(self, attr)
+        if __debug__: log('returning "{}" for "{}" on {}', value, attr, id(self))
+        return value
 
 
-    def _update_attributes(self, json):
+    def _mark_done(self, attr):
+        if __debug__: log('marking "{}" as final on {}', attr, id(self))
+        done = objattr(self, '_attributes_done')
+        done.add(attr)                  # Don't combine this with next line.
+        set_objattr(self, '_attributes_done', done)
+
+
+    def _mark_done_attributes(self):
+        # Mark attributes that have been set AND have a non-null value.
+        done = objattr(self, '_attributes_done')
+        for attr in objattr(self, '_attributes'):
+            if attr in self.__dict__ and objattr(self, attr):
+                done.add(attr)
+        if __debug__: log('updated _attributes_done list on {}: {}', id(self), done)
+        set_objattr(self, '_attributes_done', done)
+
+
+    def _set_attributes(self, json, overwrite = True):
+        '''Method stub for subclasses to override.'''
+        pass
+
+
+    def _expand_attributes(self, json):
         '''Method stub for subclasses to override.'''
         pass
 
