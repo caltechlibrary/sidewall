@@ -15,7 +15,7 @@ file "LICENSE" for more information.
 '''
 
 from .author import Author
-from .data_helpers import objattr, set_objattr, matching_record
+from .data_helpers import objattr, set_objattr
 from .debug import log
 from .exceptions import *
 from .organization import Organization
@@ -32,7 +32,7 @@ class Researcher(Person):
             # We're given an author object, probably obtained from a pub search,
             # and we want to fill it out to create a Researcher object.
             if __debug__: log('converting Author {} to Researcher', id(data))
-            super().__init__(data._json_data, creator = data)
+            super().__init__(data._orig_data, creator = data)
             for attr in objattr(self, '_new_attributes'):
                 setattr(self, attr, getattr(data, attr))
         else:
@@ -58,10 +58,9 @@ class Researcher(Person):
             set_objattr(self, 'affiliations', affiliations, overwrite = True)
 
 
-    def _fill_record(self, json):
+    def _fill_record(self, data):
         # Be careful not to invoke "self.x" b/c it causes infinite recursion.
-        if __debug__: log('filling object {} using {}', id(self), json)
-        data = matching_record(json, 'researchers', objattr(self, 'id'))
+        if __debug__: log('filling object {} using {}', id(self), data)
         if 'research_orgs' not in data or len(data['research_orgs']) == 0:
             return
         affiliations = objattr(self, 'affiliations')

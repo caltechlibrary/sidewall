@@ -76,7 +76,8 @@ class Author(Person):
         set_objattr(self, 'affiliations', affiliations, overwrite = False)
         # Special case: we do not fill author affiliations beyond what shows
         # up for given publication, so we mark it as done at this point.
-        self._mark_done('affiliations')
+        mark_done = objattr(self, '_mark_done')
+        mark_done('affiliations')
 
 
     def __repr__(self):

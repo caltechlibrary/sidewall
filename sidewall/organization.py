@@ -15,7 +15,7 @@ file "LICENSE" for more information.
 '''
 
 from .core import DimensionsCore
-from .data_helpers import objattr, set_objattr, matching_record
+from .data_helpers import objattr, set_objattr
 from .debug import log
 from .exceptions import *
 
@@ -41,9 +41,9 @@ class Organization(DimensionsCore):
         set_objattr(self, 'state_code',   data.get('state_code', ''),   overwrite)
 
 
-    def _fill_record(self, json):
-        if __debug__: log('filling object {} using {}', id(self), json)
-        data = matching_record(json, 'research_orgs', objattr(self, 'id'))
+    def _fill_record(self, data):
+        if __debug__: log('filling object {} using {}', id(self), data)
+        # Update any missing fields
         set_attributes = objattr(self, '_set_attributes')
         set_attributes(data, overwrite = False)
 
