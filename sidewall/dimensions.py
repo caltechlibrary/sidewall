@@ -27,7 +27,7 @@ if sys.platform.startswith('win'):
     import keyring.backends
     from keyring.backends.Windows import WinVaultKeyring
 
-from .data_helpers import dimensions_id
+from .data_helpers import dimensions_id, list_diff
 from .debug import log
 from .exceptions import *
 from .network import network_available, timed_request, net
@@ -154,7 +154,16 @@ class Dimensions(Singleton):
             data = resp.json()
             if __debug__: log('response: {}', data)
             self._cache[key] = data
-            return data
+            # Due to the fact that the results may not be unique and contain a
+            # single record, we end up having to search for the record matching
+            # the id we're interested in. The type results from Dimensions will
+            # be of the form {'_stats': ..., 'TYPE': [...]} where TYPE is the
+            # kind of entity in question.
+            result_keys = list_diff([*data.keys()], ['_stats'])
+            if len(result_keys) > 1:
+                raise DataMismatch('Unexpected keys in Dimensions results: {}'
+                                   .format(list(data.keys())))
+            return self._matching_record(data, result_keys[0], id)
 
 
     def query(self, query_string, limit_results = None, fetch_size = _FETCH_SIZE):
@@ -292,6 +301,19 @@ class Dimensions(Singleton):
             if re.search(stmt, query):
                 return re.sub(stmt, 'return ' + typename + data.elaboration, query)
         return query
+
+
+    def _matching_record(self, json, key, obj_id):
+        if not (json and key in json):
+            return {}
+        # Iterate over the results, matching id's until we find ours.
+        for record in json[key]:
+            if 'id' in record and record['id'] == obj_id:
+                if __debug__: log('found matching record for id "{}"', obj_id)
+                return record
+        else:
+            if __debug__: log('no record found for id "{}"', obj_id)
+            return {}
 
 
     def factory(self, cls, data, creator):
