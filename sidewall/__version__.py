@@ -6,7 +6,7 @@
 # @website https://github.com/caltechlibrary/sidewall
 # =============================================================================
 
-__version__     = '0.0.3'
+__version__     = '0.0.4'
 __title__       = 'Sidewall'
 __name__        = 'Sidewall'
 __description__ = '''Simple Dimensions Wrapper Client Library.'''
