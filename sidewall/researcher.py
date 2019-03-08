@@ -33,29 +33,9 @@ class Researcher(Person):
             # and we want to fill it out to create a Researcher object.
             if __debug__: log('converting Author {} to Researcher', id(data))
             super().__init__(data._orig_data, creator = data)
-            for attr in objattr(self, '_new_attributes'):
-                setattr(self, attr, getattr(data, attr))
         else:
             # This is a standard initialization, not a case of upconverting.
             super().__init__(data)
-
-
-    def _expand_attributes(self, data):
-        super()._expand_attributes(data)
-        if __debug__: log('expanding attributes on {} using {}', id(self), data)
-        if 'research_orgs' in data:
-            try:
-                affiliations = objattr(self, 'affiliations')
-            except:
-                affiliations = []
-            dimensions = objattr(self, '_dimensions')
-            if dimensions:
-                for org_id in data['research_orgs']:
-                    affiliations.append(dimensions.factory(Organization, {'id': org_id}, self))
-            else:
-                for org_id in data['research_orgs']:
-                    affiliations.append(Organization({'id': org_id}, self))
-            set_objattr(self, 'affiliations', affiliations, overwrite = True)
 
 
     def _fill_record(self, data):
@@ -63,9 +43,13 @@ class Researcher(Person):
         if __debug__: log('filling object {} using {}', id(self), data)
         if 'research_orgs' not in data or len(data['research_orgs']) == 0:
             return
-        affiliations = objattr(self, 'affiliations')
+        try:
+            affiliations = objattr(self, 'affiliations')
+        except:
+            affiliations = []
         dimensions = objattr(self, '_dimensions')
         if dimensions:
+            # The research_orgs list only has grid id's.
             for org_id in data['research_orgs']:
                 affiliations.append(dimensions.factory(Organization, {'id': org_id}, self))
         else:
