@@ -26,5 +26,3 @@ for item in data['publications']:
 
 for pub in publications:
     print('id {} title {}'.format(pub.id, pub.title))
-
-import pdb; pdb.set_trace()
