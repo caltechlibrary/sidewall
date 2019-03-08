@@ -28,21 +28,6 @@ def set_objattr(obj, attr, value, overwrite = True):
         object.__setattr__(obj, attr, value)
 
 
-# The next function is used by _fill_record() methods.
-
-def matching_record(json, key, obj_id):
-    if not (json and key in json):
-        return {}
-    # Iterate over the results, matching id's until we find ours.
-    for record in json[key]:
-        if 'id' in record and record['id'] == obj_id:
-            if __debug__: log('found matching record for id "{}"', obj_id)
-            return record
-    else:
-        if __debug__: log('no record found for id "{}"', obj_id)
-        return {}
-
-
 # The following originally came from a posting by user Zero Piraeus here:
 # https://stackoverflow.com/a/25851972/743730
 
@@ -54,3 +39,11 @@ def ordered(obj):
         return sorted(ordered(x) for x in obj)
     else:
         return obj
+
+
+# The following choice of implementation is based on a comparison of methods
+# posted by user "Moreno" to https://stackoverflow.com/a/23062482/743730
+
+def list_diff(a, b):
+  b = set(b)
+  return [x for x in a if x not in b]
