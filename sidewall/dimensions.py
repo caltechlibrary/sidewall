@@ -200,7 +200,7 @@ class Dimensions(Singleton):
         else:
             if __debug__: log('query produced {}', total)
             if limit_results:
-               if __debug__: log('will keep to limit_results {}', limit_results)
+               if __debug__: log('will use limit_results {}', limit_results)
                total = limit_results
 
         # Hand off results processing and query iteration to the iterator.
@@ -355,10 +355,10 @@ class queryresults(Iterator):
         self._result_type    = result_type
         self._fetch_size     = fetch_size
         self._new            = _KNOWN_RESULT_TYPES[result_type].objclass
-        self._iterator       = self._internal_iterator()
+        self._iterator       = self._results_iterator()
 
 
-    def _internal_iterator(self):
+    def _results_iterator(self):
         skip = 0
         data = self._initial_data
         while skip < self.total_count:
