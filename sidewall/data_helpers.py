@@ -2,7 +2,7 @@
 data_helpers: data manipulation utilities
 '''
 
-import json as jsonlib
+from .debug import log
 
 
 # Dimensions-specific functions
@@ -14,6 +14,19 @@ def dimensions_id(data):
 
 # General-purpose functions
 # .............................................................................
+
+# The next pair of functions are to help make code more readable.  They're
+# used in code called from core.__getattr__ and core.__getattribute__ because
+# in those cases if you simply involke "self.x" you get infinite recursion.
+
+def objattr(obj, attr):
+    return object.__getattribute__(obj, attr)
+
+def set_objattr(obj, attr, value, overwrite = True):
+    if overwrite or attr not in objattr(obj, '__dict__') or not objattr(obj, attr):
+        if __debug__: log('setting "{}" on {} to "{}"', attr, id(obj), value)
+        object.__setattr__(obj, attr, value)
+
 
 # The following originally came from a posting by user Zero Piraeus here:
 # https://stackoverflow.com/a/25851972/743730
