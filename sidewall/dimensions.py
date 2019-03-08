@@ -159,7 +159,7 @@ class Dimensions(Singleton):
             # the id we're interested in. The type results from Dimensions will
             # be of the form {'_stats': ..., 'TYPE': [...]} where TYPE is the
             # kind of entity in question.
-            result_keys = list_diff([*data.keys()], ['_stats'])
+            result_keys = list_diff(list(data.keys()), ['_stats'])
             if len(result_keys) > 1:
                 raise DataMismatch('Unexpected keys in Dimensions results: {}'
                                    .format(list(data.keys())))
