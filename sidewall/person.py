@@ -15,16 +15,26 @@ file "LICENSE" for more information.
 '''
 
 from .core import DimensionsCore
-from .data_helpers import objattr, set_objattr, dimensions_id
+from .data_helpers import objattr, set_objattr, dimensions_id, matching_record
 from .debug import log
 from .exceptions import *
 from .organization import Organization
 
 
+# A frustrating discovery has been that searching Dimensions with
+#     search publications where researchers.id="{}" return researchers limit 1
+# does NOT necessarily return the researcher that is identified by the id
+# value in the argument.  (You would think that the first result would be the
+# same researcher, but no.)  It turns out we have to iterate over multiple
+# results and match the researcher id's to find the right record.
+#
+# So, that's the explanation for why the search template returns many results
+# instead of a single one, and why _fill_record() iterates the way it does.
+
 class Person(DimensionsCore):
     _new_attributes = ['first_name', 'last_name', 'id', 'orcid', 'current_organization']
     _attributes     = _new_attributes + DimensionsCore._attributes
-    _search_tmpl    = 'publications where researchers.id="{}" return researchers limit 1'
+    _search_tmpl    = 'publications where researchers.id="{}" return researchers'
 
 
     def _set_attributes(self, data, overwrite = False):
@@ -41,6 +51,7 @@ class Person(DimensionsCore):
 
 
     def _expand_attributes(self, data):
+        super()._expand_attributes(data)
         if __debug__: log('expanding attributes on {} using {}', id(self), data)
         if 'current_organization_id' in data:
             org_id = data.get('current_organization_id')
@@ -56,17 +67,16 @@ class Person(DimensionsCore):
 
     def _fill_record(self, json):
         if __debug__: log('filling object {} using {}', id(self), json)
-        if not objattr(self, 'orcid') and 'researchers' in json:
-            if len(json['researchers']) == 0:
-                data = json['researchers'][0]
-                if 'orcid_id' in data:
-                    set_attributes = objattr(self, '_set_attributes')
-                    set_attributes(data)
-            else:
-                raise DataMismatch('Unexpected value in researchers')
-        if not objattr(self, 'current_organization') and 'current_organization_id' in json:
-            org_id = json['current_organization_id']
-            if org_id:
+        if objattr(self, 'orcid') and objattr(self, 'current_organization'):
+            return
+        data = matching_record(json, 'researchers', objattr(self, 'id'))
+        if not objattr(self, 'orcid'):
+            if 'orcid_id' in data:
+                set_attributes = objattr(self, '_set_attributes')
+                set_attributes(data, overwrite = True)
+        if not objattr(self, 'current_organization'):
+            if 'current_organization_id' in data and data['current_organization_id']:
+                org_id = data['current_organization_id']
                 dimensions = objattr(self, '_dimensions')
                 if dimensions:
                     org = dimensions.factory(Organization, {'id': org_id}, self)

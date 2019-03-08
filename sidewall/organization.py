@@ -15,36 +15,16 @@ file "LICENSE" for more information.
 '''
 
 from .core import DimensionsCore
-from .data_helpers import objattr, set_objattr
+from .data_helpers import objattr, set_objattr, matching_record
 from .debug import log
 from .exceptions import *
 
-
-# search publications where research_orgs.id="grid.214458.e"
-#     return research_orgs limit 1
-#
-# gives:
-#
-# # {2 items
-# "research_orgs":[1 item
-# 0:{5 items
-# "id":"grid.214458.e"
-# "count":225580
-# "acronym":"UM"
-# "name":"University of Michigan"
-# "country_name":"United States"
-# }
-# ]
-# "_stats":{1 item
-# "total_count":225580
-# }
-# }
 
 class Organization(DimensionsCore):
     _new_attributes = ['acronym', 'city', 'city_id', 'country', 'country_code',
                        'country_name', 'id', 'name', 'state', 'state_code']
     _attributes     = _new_attributes + DimensionsCore._attributes
-    _search_tmpl    = 'publications where research_orgs.id="{}" return research_orgs limit 1'
+    _search_tmpl    = 'publications where research_orgs.id="{}" return research_orgs'
 
 
     def _set_attributes(self, data, overwrite = False):
@@ -63,12 +43,9 @@ class Organization(DimensionsCore):
 
     def _fill_record(self, json):
         if __debug__: log('filling object {} using {}', id(self), json)
-        if 'research_orgs' in json:
-            if len(json['research_orgs']) == 1:
-                set_attributes = objattr(self, '_set_attributes')
-                set_attributes(json['research_orgs'][0], overwrite = False)
-            else:
-                raise DataMismatch('Unexpected value in research_orgs')
+        data = matching_record(json, 'research_orgs', objattr(self, 'id'))
+        set_attributes = objattr(self, '_set_attributes')
+        set_attributes(data, overwrite = False)
 
 
     def __repr__(self):

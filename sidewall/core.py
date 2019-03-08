@@ -49,7 +49,6 @@ class DimensionsCore(object):
         if not isinstance(data, dict):
             raise InternalError('Data not in dict format')
         self._json_data = data         # A dict.
-        self._search_data = None       # If we search, we store it for debugging
         self._hash = None
         self._dimensions = None
         self._attributes_expanded = False
@@ -79,8 +78,9 @@ class DimensionsCore(object):
         if not (objattr(self, attr) or attr in objattr(self, '_attributes_done')):
             # Attribute still has no value, but we haven't tried searching yet.
             # All the methods for this approach need a Dimensions id.
+            dim = objattr(self, '_dimensions')
             dim_id = objattr(self, 'id')
-            if dim_id:
+            if dim and dim_id:
                 if __debug__: log('still missing value for "{}" on {}', attr, id(self))
                 try:
                     # If we know of a way to expand values on this object, there
@@ -89,20 +89,16 @@ class DimensionsCore(object):
                 except:
                     if __debug__: log("no search template -- can't fill in values")
                 else:
-                    dim = objattr(self, '_dimensions')
-                    if dim:
-                        search = objattr(dim, 'record_search')
-                        search_results = search(search_tmpl, dim_id)
-                        # Save what we got back in case we need to debug things.
-                        set_objattr(self, '_search_data', search_results)
-                        # Subclasses may have their own _fill_record.  Look for all.
-                        classes = inspect.getmro(self.__class__)
-                        for c in classes[:-1]:  # Skip class 'object'.
-                            try:
-                                fill_record = objattr(c, '_fill_record')
-                                fill_record(self, search_results)
-                            except:
-                                pass
+                    search = objattr(dim, 'record_search')
+                    search_results = search(search_tmpl, dim_id)
+                    # Subclasses may have their own _fill_record.  Look for all.
+                    classes = inspect.getmro(self.__class__)
+                    for c in classes[:-1]:  # Skip class 'object'.
+                        try:
+                            fill_record = objattr(c, '_fill_record')
+                            fill_record(self, search_results)
+                        except:
+                            pass
             else:
                 if __debug__: log("missing id -- can't search for \"{}\"", attr)
             # We now set the flag that we tried, whether we can search or not.

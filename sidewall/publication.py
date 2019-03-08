@@ -87,6 +87,7 @@ class Publication(DimensionsCore):
 
 
     def _expand_attributes(self, data):
+        super()._expand_attributes(data)
         if __debug__: log('expanding attributes on {} using {}', id(self), data)
         if 'author_affiliations' in data:
             try:
