@@ -48,7 +48,8 @@ class DimensionsCore(object):
     def __init__(self, data, creator = None, dimensions_obj = None):
         if not isinstance(data, dict):
             raise InternalError('Data not in dict format')
-        self._json_data = data         # A dict.
+        self._orig_data = data         # A dict.
+        self._fill_data = None         # If we ever run a fill search
         self._hash = None
         self._dimensions = None
         self._attributes_expanded = False
@@ -73,7 +74,7 @@ class DimensionsCore(object):
             # Attribute has no value, but we haven't expanded all attributes.
             if __debug__: log('"{}" hasn\'t been set yet', attr)
             expand_attributes = objattr(self, '_expand_attributes')
-            expand_attributes(objattr(self, '_json_data'))
+            expand_attributes(objattr(self, '_orig_data'))
             set_objattr(self, '_attributes_expanded', True)
         if not (objattr(self, attr) or attr in objattr(self, '_attributes_done')):
             # Attribute still has no value, but we haven't tried searching yet.
@@ -91,6 +92,8 @@ class DimensionsCore(object):
                 else:
                     search = objattr(dim, 'record_search')
                     search_results = search(search_tmpl, dim_id)
+                    # Store the results on this object, to help debugging.
+                    set_objattr(self, '_fill_data', search_results)
                     # Subclasses may have their own _fill_record.  Look for all.
                     classes = inspect.getmro(self.__class__)
                     for c in classes[:-1]:  # Skip class 'object'.
@@ -183,8 +186,8 @@ class DimensionsCore(object):
             return self._hash
         if hasattr(self, 'id'):
             self._hash = hash(self.id)
-        elif hasattr(self, '_json_data') and self._json_data:
-            self._hash = hash(jsonlib.dumps(self._json_data))
+        elif hasattr(self, '_orig_data') and self._orig_data:
+            self._hash = hash(jsonlib.dumps(self._orig_data))
         else:
             self._hash = hash(self)
         return self._hash
