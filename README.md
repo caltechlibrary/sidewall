@@ -9,7 +9,7 @@ _Sidewall_ is a package for interacting with the [Dimensions](https://app.dimens
 
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg?style=flat-square)](https://choosealicense.com/licenses/bsd-3-clause)
 [![Python](https://img.shields.io/badge/Python-3.5+-brightgreen.svg?style=flat-square)](http://shields.io)
-[![Latest version](https://img.shields.io/badge/Latest_version-0.0.1-b44e88.svg?style=flat-square)](http://shields.io)
+[![Latest version](https://img.shields.io/badge/Latest_version-0.0.5-b44e88.svg?style=flat-square)](http://shields.io)
 
 
 Table of Contents
