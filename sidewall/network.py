@@ -1,6 +1,22 @@
 '''
 network.py: miscellaneous network utilities for Sidewall.
 
+About rate limit tracking
+-------------------------
+
+All network calls in Sidewall use net(), which itself funnels all calls to a
+single function, timed_request().  Rate limits are tracked using the counting
+code in ratelimit.py and a Python decorator around timed_request().  However,
+the Dimensions rate limit is counted per IP address, and there's just no way
+to track if the user is doing things like starting/restarting a program or
+running multiple programs.  This means that in addition to the direct
+tracking done for timed_request() (which helps for long-running single
+programs), the code in net() also detects when a rate limit is hit despite
+our efforts.  If the limit is hit, then the code uses a geometric
+back-off-and-retry strategy.  This is necessary because the Dimensions API
+doesn't offer any way to find out the time remaining in the rate limit time
+window -- or really any info at all about the status of the rate limit.
+
 Authors
 -------
 
@@ -38,7 +54,7 @@ from .exceptions import *
 # Constants.
 # .............................................................................
 
-_MAX_RECURSIVE_CALLS = 5
+_MAX_RECURSIVE_CALLS = 10
 '''How many times can certain network functions call themselves upcon
 encountering a network error before they stop and give up.'''
 
@@ -49,7 +65,11 @@ _MAX_RETRIES = 5
 '''Maximum number of times we back off and try again.  This also affects the
 maximum wait time that will be reached after repeated retries.'''
 
-_DIMENSIONS_RATE_LIMIT = RateLimit(30, 60)
+# The Dimensions documentation at https://docs.dimensions.ai/dsl/api.html
+# states that the rate limit is 30 calls/minute, but as of today (2019-03-08)
+# I am certain this is not true. I get a code 429 on the 22nd or 23rd call.
+
+_DIMENSIONS_RATE_LIMIT = RateLimit(22, 60)
 '''Rate limit imposed by Dimensions API service.'''
 
 
@@ -157,7 +177,7 @@ def net(get_or_post, url, session = None, polling = False, recursing = 0, **kwar
               and arg0.args and isinstance(args0.args[1], ConnectionResetError)):
             if __debug__: log('net() got ConnectionResetError; will recurse')
             sleep(1)                    # Sleep a short time and try again.
-            return net(get_or_post, url, polling, recursing + 1, session, **kwargs)
+            return net(get_or_post, url, session, polling, recursing + 1, **kwargs)
         else:
             return (req, NetworkFailure(str(ex)))
     except requests.exceptions.ReadTimeout as ex:
@@ -185,11 +205,16 @@ def net(get_or_post, url, session = None, polling = False, recursing = 0, **kwar
     elif code in [415, 416]:
         error = ServiceFailure(addurl('Server rejected the request'))
     elif code == 429:
+        if recursing < _MAX_RECURSIVE_CALLS:
+            pause = 5 * (recursing + 1)   # +1 b/c we start with recursing = 0.
+            if __debug__: log('rate limit hit -- sleeping {}', pause)
+            sleep(pause)                  # 5 s, then 10 s, then 15 s, etc.
+            return net(get_or_post, url, session, polling, recursing + 1, **kwargs)
         error = RateLimitExceeded('Server blocking further requests due to rate limits')
     elif code == 503:
         error = ServiceFailure('Server is unavailable -- try again later')
     elif code in [500, 501, 502, 506, 507, 508]:
-        error = ServiceFailure('Internal server error (HTTP code {})'.format(code))
+        error = ServiceFailure('Dimensions server error (HTTP code {})'.format(code))
     elif not (200 <= code < 400):
         error = NetworkFailure("Unable to resolve {}".format(url))
     return (req, error)
