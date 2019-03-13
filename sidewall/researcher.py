@@ -27,20 +27,30 @@ class Researcher(Person):
     _attributes = _new_attributes + Person._attributes
 
 
-    def __init__(self, data):
+    def __init__(self, data, creator = None):
         if isinstance(data, Author):
             # We're given an author object, probably obtained from a pub search,
             # and we want to fill it out to create a Researcher object.
             if __debug__: log('converting Author {} to Researcher', id(data))
-            super().__init__(data._orig_data, creator = data)
+            super().__init__(data._orig_data, creator = creator)
         else:
             # This is a standard initialization, not a case of upconverting.
             super().__init__(data)
 
 
+    def _expand_attributes(self, data):
+        # Be careful not to invoke "self.x" b/c it causes infinite recursion.
+        if __debug__: log('expanding attributes on {} using {}', id(self), data)
+        self._set_affiliations(data)
+
+
     def _fill_record(self, data):
         # Be careful not to invoke "self.x" b/c it causes infinite recursion.
         if __debug__: log('filling object {} using {}', id(self), data)
+        self._set_affiliations(data)
+
+
+    def _set_affiliations(self, data):
         if 'research_orgs' not in data or len(data['research_orgs']) == 0:
             return
         try:
