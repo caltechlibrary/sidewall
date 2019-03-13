@@ -1,6 +1,30 @@
 '''
 person.py: base class for people records in Sidewall
 
+This uses _fill_record() to update our object using a search template that
+searches for a researcher by their Dimensions id.  The main reason for doing
+this behind-the-scenes filling is the following.  It turns out that if you do
+a search for publications in Dimensions and then grab the author info, you
+will not necessarily get the same details about a given author for all of
+that person's publications.  As best as I can tell from the circumstantial
+evidence, the Dimensions system probably stores each publication as an
+entirely separate document, with separate lists of authors for each one, and
+does not always seek to reconcile differences in author information between
+separate publications.  So, the same author (with the same Dimensions id) may
+end up with a full name and an ORCID id in one publication record, but may
+end up missing the ORCID in another publication record.  The consequence is
+that the ORCID and other fields for a given person may be somewhere in their
+system, but you can't be sure you'll get it in a particular publication
+record.  So we have to do extra work to look for the missing fields.  To
+complicate matters, given any publication result, there's no way to know
+whether the author details are complete -- if something is missing (like the
+ORCID), the only want to find out if Dimensions knows the value is to do
+another search to look for it.
+
+Limiting what we can do this way is another complication: the Dimensions
+author records don't always contain a Dimensions id.  Without a unique id
+to search for, we can't use the search approach to fill in missing fields.
+
 Authors
 -------
 
@@ -51,7 +75,7 @@ class Person(DimensionsCore):
 
 
     # When _expand_attributes() gets called, it will be with a record for a
-    # researcher, which looks like this example.  We use Note that the current
+    # researcher, which looks like the example below. Note that the current
     # organization shows up in both current_organization_id and the list of
     # affiliations.  We fish out the data in the list of affiliations and hand
     # that to the creation of an Organization object for the current org field.
