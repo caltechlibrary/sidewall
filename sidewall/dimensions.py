@@ -60,7 +60,7 @@ _KEYRING = "org.caltech.library.sidewall"
 '''Prefix used to create a keyring entry for the user's credentials.'''
 
 _KNOWN_RESULT_TYPES = {
-    'publications' : Handler(Publication, '[basics+extras+book]'),
+    'publications' : Handler(Publication, '[all]'),
     'research_orgs': Handler(Organization, ''),
     'researchers'  : Handler(Researcher, ''),
     }
@@ -289,8 +289,9 @@ class Dimensions(Singleton):
 
 
     def _result_type(self, query):
+        query = query.strip()
         for typename in _KNOWN_RESULT_TYPES.keys():
-            if re.search(r'return\s*' + typename, query):
+            if re.search(r'return\s*' + typename + '$', query):
                 return typename
         return None
 
