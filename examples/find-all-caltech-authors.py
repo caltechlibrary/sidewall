@@ -26,20 +26,32 @@ except:
 # .............................................................................
 # The rest of this file is the actual code for the example.
 
+import sidewall
 from sidewall import dimensions
 
 print('Logging in to Dimensions')
 dimensions.login()
 
+# The "researcher" type is a facet of publications, and since Dimensions won't
+# let you use skip syntax with facets, you can't get more than 1000 results
+# using "search publications ... return researchers".  This forces us to return
+# publications, then look through each pub's author list and find the authors
+# that have Caltech affiliations.
+
 print('Sending query to Dimensions')
 results = dimensions.query('search publications where research_orgs.id = "grid.20861.3d" return publications')
 
-print('Found {} publications from Dimensions'.format(len(results)))
+print('Dimensions query found {} publications'.format(len(results)))
 
+print('-'*70)
+print('Finding publication authors that have Caltech affiliations')
+print('')
+count = 0
 for publication in results:
     for author in publication.authors:
-        for org in author.affiliations:
-            if org.id == "grid.20861.3d":
-                print('{} {} ({})'.format(author.first_name, author.last_name, author.id))
+        if "grid.20861.3d" in [org.id for org in author.affiliations]:
+            count += 1
+            full_name = author.last_name + ', ' + author.first_name
+            print('[{:6}] {:<30} {:20}'.format(count, full_name, author.orcid))
 
 print('Done.')
