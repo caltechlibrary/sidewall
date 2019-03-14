@@ -21,4 +21,5 @@ from .simple import SimpleEntity
 
 
 class Category(SimpleEntity):
-    _new_attributes = []
+    pass
+
