@@ -39,7 +39,7 @@ file "LICENSE" for more information.
 '''
 
 from .core import DimensionsCore
-from .data_helpers import objattr, set_objattr, dimensions_id, matching_record
+from .data_helpers import objattr, set_objattr, dimensions_id, matching_record, new_object
 from .debug import log
 from .exceptions import *
 from .organization import Organization
@@ -101,23 +101,8 @@ class Person(DimensionsCore):
     def _expand_attributes(self, data):
         super()._expand_attributes(data)
         if __debug__: log('expanding attributes on {} using {}', id(self), data)
-        if 'current_organization_id' in data:
-            org_id = data.get('current_organization_id')
-            if org_id:
-                # If there's an affiliations list, one of them might contain
-                # richer info about the organization. Let's try to find it.
-                if 'affiliations' in data:
-                    org_record = matching_record(data, 'affiliations', org_id)
-                if not org_record:
-                    org_record = {'id': org_id}
-                dimensions = objattr(self, '_dimensions')
-                if dimensions:
-                    org = dimensions.factory(Organization, org_record, self)
-                else:
-                    org = Organization(org_record, self)
-                set_objattr(self, 'current_organization', org)
-                return
-        set_objattr(self, 'current_organization', None)
+        org_from_data = objattr(self, '_org_from_data')
+        set_objattr(self, 'current_organization', org_from_data(data))
 
 
     def _fill_record(self, data):
@@ -125,15 +110,23 @@ class Person(DimensionsCore):
         if not objattr(self, 'orcid') and 'orcid_id' in data:
             set_attributes = objattr(self, '_set_attributes')
             set_attributes(data, overwrite = True)
-        if not objattr(self, 'current_organization') and 'current_organization_id' in data:
-            org_id = data['current_organization_id']
-            if org_id:
-                dimensions = objattr(self, '_dimensions')
-                if dimensions:
-                    org = dimensions.factory(Organization, {'id': org_id}, self)
-                else:
-                    org = Organization({'id': org_id}, self)
-                set_objattr(self, 'current_organization', org)
+        if not objattr(self, 'current_organization', None):
+            org_from_data = objattr(self, '_org_from_data')
+            set_objattr(self, 'current_organization', org_from_data(data))
+
+
+    def _org_from_data(self, data):
+        org_id = data.get('current_organization_id', None)
+        if org_id:
+            org_record = {'id': org_id} # Fallback value.
+            # If there's an affiliations list, one of them might contain
+            # richer info about the organization. Let's try to find it.
+            if 'affiliations' in data:
+                org_record = matching_record(data, 'affiliations', org_id)
+            dimensions = objattr(self, '_dimensions', None)
+            return new_object(Organization, org_record, dimensions, self)
+        else:
+            return None
 
 
 def _normalized_orcid(value):
