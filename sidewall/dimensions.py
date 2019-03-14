@@ -30,6 +30,7 @@ if sys.platform.startswith('win'):
 from .data_helpers import dimensions_id, list_diff, matching_record
 from .debug import log
 from .exceptions import *
+from .grant import Grant
 from .network import network_available, timed_request, net
 from .organization import Organization
 from .publication import Publication
@@ -63,6 +64,7 @@ _KNOWN_RESULT_TYPES = {
     'publications' : Handler(Publication, '[all]'),
     'research_orgs': Handler(Organization, ''),
     'researchers'  : Handler(Researcher, ''),
+    'grants'       : Handler(Grant, '[all]'),
     }
 '''Known types of results that we can handle in a query.'''
 
@@ -163,6 +165,8 @@ class Dimensions(Singleton):
             if len(result_keys) > 1:
                 raise DataMismatch('Unexpected keys in Dimensions results: {}'
                                    .format(list(data.keys())))
+            if len(result_keys) == 0:
+                return {}
             return matching_record(data, result_keys[0], id)
 
 
@@ -309,9 +313,9 @@ class Dimensions(Singleton):
         if dim_id in self._cache:
             if __debug__: log('returning cached object for "{}"', dim_id)
             return self._cache[dim_id]
-        if __debug__: log('creating new {} for Dimensions object "{}"', cls, dim_id)
+        if __debug__: log('creating new {} object for "{}"', cls.__name__, dim_id)
         new_obj = cls(data, creator = creator, dimensions_obj = self)
-        if __debug__: log('object {} has {}', id(new_obj), cls)
+        if __debug__: log('object {} has class {}', id(new_obj), cls.__name__)
         if dim_id:
             self._cache[dim_id] = new_obj
         return new_obj
