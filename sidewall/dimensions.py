@@ -131,44 +131,23 @@ class Dimensions(Singleton):
             if __debug__: log("returning cached value for '{}'", search)
             return self._cache[key]
 
-        if __debug__: log("posting query '{}'", search)
-        headers = {'Authorization': "JWT " + self._dimensions_token}
-        (resp, error) = net('post', _DSL_URL, session = self._session,
-                            data = search, headers = headers)
-
-        # Deal with problems, retry if appropriate, or fail.
-        if isinstance(error, NoContent):
-            if __debug__: log('server returned a "no content" code')
-            self._cache[key] = {}
+        data = self._post(search)
+        if __debug__: log('response: {}', data)
+        self._cache[key] = data
+        if data == {}:
             return {}
-        elif resp.status_code == 202:
-            # Request was received by the server but not acted upon.
-            if retry <= _MAX_RETRIES:
-                if __debug__: log('got code 202 -- pausing & retrying')
-                sleep(_RETRY_SLEEP)     # Sleep a short time and try again.
-                return self.record_search(query, id, retry + 1)
-            else:
-                raise ServiceFailure('Server returned code 202 multiple times')
-        elif resp.status_code == 400:
-            raise RequestError(self._request_error_msg(resp))
-        elif error:
-            raise error
-        else:
-            data = resp.json()
-            if __debug__: log('response: {}', data)
-            self._cache[key] = data
-            # Due to the fact that the results may not be unique and contain a
-            # single record, we end up having to search for the record matching
-            # the id we're interested in. The type results from Dimensions will
-            # be of the form {'_stats': ..., 'TYPE': [...]} where TYPE is the
-            # kind of entity in question.
-            result_keys = list_diff(list(data.keys()), ['_stats'])
-            if len(result_keys) > 1:
-                raise DataMismatch('Unexpected keys in Dimensions results: {}'
-                                   .format(list(data.keys())))
-            if len(result_keys) == 0:
-                return {}
-            return matching_record(data, result_keys[0], id)
+        # Due to the fact that the results may not be unique and contain a
+        # single record, we end up having to search for the record matching
+        # the id we're interested in. The type results from Dimensions will
+        # be of the form {'_stats': ..., 'TYPE': [...]} where TYPE is the
+        # kind of entity in question.
+        result_keys = list_diff(list(data.keys()), ['_stats'])
+        if len(result_keys) > 1:
+            raise DataMismatch('Unexpected keys in Dimensions results: {}'
+                               .format(list(data.keys())))
+        if len(result_keys) == 0:
+            return {}
+        return matching_record(data, result_keys[0], id)
 
 
     def query(self, query_string, limit_results = None, fetch_size = _FETCH_SIZE):
@@ -237,7 +216,7 @@ class Dimensions(Singleton):
         # Deal with problems, retry if appropriate, or fail.
         if isinstance(error, NoContent):
             if __debug__: log('server returned a "no content" code')
-            return []
+            return {}
         elif resp.status_code == 202:
             # Request was received by the server but not acted upon.
             if retry <= _MAX_RETRIES:
