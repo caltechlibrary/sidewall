@@ -24,9 +24,10 @@ from .exceptions   import DataMismatch
 from .organization import Organization
 from .researcher   import Researcher
 from .state        import State
+from .persistable  import Persistable
 
 
-class Grant(DimensionsCore):
+class Grant(DimensionsCore, Persistable):
     _new_attributes = ['FOR', 'FOR_first', 'HRCS_HC', 'HRCS_RAC', 'RCDC',
                        'abstract', 'active_year', 'date_inserted', 'end_date',
                        'funder_countries', 'funders', 'funding_aud',

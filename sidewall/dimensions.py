@@ -27,7 +27,7 @@ if sys.platform.startswith('win'):
     import keyring.backends
     from keyring.backends.Windows import WinVaultKeyring
 
-from .data_helpers import dimensions_id, list_diff, matching_record
+from .data_helpers import dimensions_id, list_diff, matching_record, objattr
 from .debug import log
 from .exceptions import *
 from .grant import Grant
@@ -89,7 +89,8 @@ class Dimensions(Singleton):
         self._reset_keyring    = False
         self._dimensions_token = None
         self._session          = requests.Session()
-        self._cache            = dict()
+
+        self._init_cache()
 
 
     def login(self, username = None, password = None,
@@ -216,6 +217,10 @@ class Dimensions(Singleton):
                if __debug__: log('will use limit_results {}', limit_results)
                total = limit_results
 
+        # If we get this far, the next step will start creating objects. Clear
+        # the cache of any objects that mustn't be persisted across queries.
+        self._clear_cache()
+
         # Hand off results processing and query iteration to the iterator.
         return queryresults(self, query_string, expanded_query, limit_results,
                             total, data, result_type, fetch_size)
@@ -308,6 +313,20 @@ class Dimensions(Singleton):
         return query
 
 
+    def _init_cache(self):
+        self._cache = dict()
+
+
+    def _clear_cache(self):
+        for key in list(self._cache.keys()):
+            if not objattr(self._cache[key], 'persistable', False):
+                del self._cache[key]
+
+
+    def cache_stats(self):
+        return {'total_items': len(self._cache)}
+
+
     def factory(self, cls, data, creator):
         dim_id = dimensions_id(data)
         if dim_id in self._cache:
@@ -319,10 +338,6 @@ class Dimensions(Singleton):
         if dim_id:
             self._cache[dim_id] = new_obj
         return new_obj
-
-
-    def cache_stats(self):
-        return {'total_items': len(self._cache)}
 
 
     def _request_error_msg(self, resp):

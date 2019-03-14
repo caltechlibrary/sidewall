@@ -17,10 +17,10 @@ file "LICENSE" for more information.
 from .core import DimensionsCore
 from .data_helpers import objattr, set_objattr
 from .debug import log
-from .exceptions import *
+from .persistable import Persistable
 
 
-class Journal(DimensionsCore):
+class Journal(DimensionsCore, Persistable):
     _new_attributes = ['id', 'title']
     _attributes = _new_attributes + DimensionsCore._attributes
 

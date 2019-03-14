@@ -32,9 +32,10 @@ from .data_helpers import objattr, set_objattr, new_object
 from .debug import log
 from .exceptions import *
 from .journal import Journal
+from .persistable import Persistable
 
 
-class Publication(DimensionsCore):
+class Publication(DimensionsCore, Persistable):
     # Note: do NOT add "authors" to the following list.  The "authors" property
     # is something we add, and is not present in Dimensions.
     _new_attributes = ['altmetric', 'author_affiliations', 'book_doi',

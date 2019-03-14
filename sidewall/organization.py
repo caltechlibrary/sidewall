@@ -17,10 +17,10 @@ file "LICENSE" for more information.
 from .core import DimensionsCore
 from .data_helpers import objattr, set_objattr
 from .debug import log
-from .exceptions import *
+from .persistable import Persistable
 
 
-class Organization(DimensionsCore):
+class Organization(DimensionsCore, Persistable):
     _new_attributes = ['acronym', 'city', 'city_id', 'country', 'country_code',
                        'country_name', 'id', 'name', 'state', 'state_code']
     _attributes     = _new_attributes + DimensionsCore._attributes
