@@ -21,7 +21,8 @@ from .exceptions import *
 
 
 class SimpleEntity(DimensionsCore):
-    _attributes = ['id', 'name'] + DimensionsCore._attributes
+    _new_attributes = ['id', 'name']
+    _attributes = _new_attributes + DimensionsCore._attributes
 
 
     def _set_attributes(self, data, overwrite = False):

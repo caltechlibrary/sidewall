@@ -21,7 +21,8 @@ from .exceptions import *
 
 
 class Journal(DimensionsCore):
-    _attributes = ['id', 'title'] + DimensionsCore._attributes
+    _new_attributes = ['id', 'title']
+    _attributes = _new_attributes + DimensionsCore._attributes
 
 
     def _set_attributes(self, data, overwrite = False):

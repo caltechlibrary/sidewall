@@ -21,4 +21,4 @@ from .simple import SimpleEntity
 
 
 class Country(SimpleEntity):
-    pass
+    _new_attributes = []

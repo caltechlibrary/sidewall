@@ -82,6 +82,7 @@ class DimensionsCore(object):
             # All the methods for this approach need a Dimensions id.
             dim = objattr(self, '_dimensions')
             dim_id = objattr(self, 'id')
+            mark_done = objattr(self, '_mark_done')
             if dim and dim_id:
                 if __debug__: log('still missing value for "{}" on {}', attr, id(self))
                 try:
@@ -101,12 +102,18 @@ class DimensionsCore(object):
                         try:
                             fill_record = objattr(c, '_fill_record')
                             fill_record(self, search_results)
+                            # If we call a class' _fill_record(), we assume it
+                            # fills all attributes to the extent possible.
+                            # We mark them all as done so we don't try again.
+                            attributes_filled = objattr(self, '_new_attributes', [])
+                            if __debug__: log('marking filled attributes: {}',
+                                              attributes_filled)
+                            mark_done(attributes_filled)
                         except:
                             pass
             else:
                 if __debug__: log("missing id -- can't search for \"{}\"", attr)
-            # We now set the flag that we tried, whether we can search or not.
-            mark_done = objattr(self, '_mark_done')
+                # We now set the flag that we tried, whether we can search or not.
             mark_done(attr)
         value = objattr(self, attr)
         if __debug__: log('returning "{}" for "{}" on {}', value, attr, id(self))
@@ -116,7 +123,10 @@ class DimensionsCore(object):
     def _mark_done(self, attr):
         if __debug__: log('marking "{}" as final on {}', attr, id(self))
         done = objattr(self, '_attributes_done')
-        done.add(attr)                  # Don't combine this with next line.
+        if isinstance(attr, list):
+            done.update(attr)
+        else:
+            done.add(attr)
         set_objattr(self, '_attributes_done', done)
 
 

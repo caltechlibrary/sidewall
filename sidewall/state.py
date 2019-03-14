@@ -21,4 +21,4 @@ from .simple import SimpleEntity
 
 
 class State(SimpleEntity):
-    pass
+    _new_attributes = []
