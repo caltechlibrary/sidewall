@@ -72,11 +72,11 @@ class Grant(DimensionsCore):
         set_objattr(self, 'title_language',      data.get('title_language', ''),      overwrite)
 
         # Remaining attributes are stored as objects, and we delay expanding
-        # them until they're accessed.  See _expand_attributes().
+        # them until they're accessed.  See _lazy_expand().
 
 
-    def _expand_attributes(self, data):
-        super()._expand_attributes(data)
+    def _lazy_expand(self, data):
+        super()._lazy_expand(data)
         if __debug__: log('expanding attributes on {} using {}', id(self), data)
         make_objects_list = objattr(self, '_make_objects_list')
 
@@ -100,7 +100,7 @@ class Grant(DimensionsCore):
             for researcher in objattr(self, 'researchers'):
                 if researcher.id != details['id']:
                     continue
-                researcher._expand_attributes(details)
+                researcher._lazy_expand(details)
                 researcher._set_affiliations(details, 'affiliations')
 
         # Bizarrely, the org data stored under the recipient researcher's

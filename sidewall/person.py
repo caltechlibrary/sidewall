@@ -78,7 +78,7 @@ class Person(DimensionsCore):
         set_objattr(self, 'orcid', _normalized_orcid(orcid_value), overwrite)
 
 
-    # When _expand_attributes() gets called, it will be with a record for a
+    # When _lazy_expand() gets called, it will be with a record for a
     # researcher, which looks like the example below. Note that the current
     # organization shows up in both current_organization_id and the list of
     # affiliations.  We fish out the data in the list of affiliations and hand
@@ -98,8 +98,8 @@ class Person(DimensionsCore):
     #                       'state': 'California',
     #                       'name': 'Lawrence Berkeley National Laboratory'}]}
 
-    def _expand_attributes(self, data):
-        super()._expand_attributes(data)
+    def _lazy_expand(self, data):
+        super()._lazy_expand(data)
         if __debug__: log('expanding attributes on {} using {}', id(self), data)
         org_from_data = objattr(self, '_org_from_data')
         set_objattr(self, 'current_organization', org_from_data(data))

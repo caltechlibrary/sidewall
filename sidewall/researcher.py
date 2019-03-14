@@ -38,7 +38,7 @@ class Researcher(Person):
             super().__init__(data, creator, dimensions_obj)
 
 
-    def _expand_attributes(self, data):
+    def _lazy_expand(self, data):
         # Be careful not to invoke "self.x" b/c it causes infinite recursion.
         if __debug__: log('expanding attributes on {} using {}', id(self), data)
         # When researcher data comes from a grant, there may be a 'role' field.

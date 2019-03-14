@@ -58,8 +58,8 @@ class Author(Person):
         if __debug__: log('setting attributes on {} using {}', id(self), data)
 
 
-    def _expand_attributes(self, data):
-        super()._expand_attributes(data)
+    def _lazy_expand(self, data):
+        super()._lazy_expand(data)
         if __debug__: log('expanding attributes on {} using {}', id(self), data)
         affiliations = objattr(self, 'affiliations', [])
         dimensions = objattr(self, '_dimensions', None)

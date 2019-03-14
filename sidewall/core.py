@@ -25,16 +25,16 @@ from .data_helpers import dimensions_id, objattr, set_objattr
 # .............................................................................
 #
 # When an object is first created, the goal is to set only a minimum number
-# of attributes here, and delay calling the _expand_attributes() methods
+# of attributes here, and delay calling the _lazy_expand() methods
 # until additional fields are necessary.  The basic scheme is this:
 #
 # - Every class has a _set_attributes() method that sets the scalar attributes.
 #
 # - Classes that have more elaborate attributes (such as lists of other
-#   objects) have the method _expand_attributes().  This gets called by
+#   objects) have the method _lazy_expand().  This gets called by
 #   __getattribute__(), defined below, upon the first time an elaborate
 #   attribute is accessed.  The core object attribute _attributes_expanded is
-#   set by __getattribute__() to mark that the method _expand_attributes()
+#   set by __getattribute__() to mark that the method _lazy_expand()
 #   has been called, so that it's not called again.
 #
 # - Attribute values are not always filled in because the search results from
@@ -52,7 +52,7 @@ class DimensionsCore(object):
         self._fill_data = None         # If we ever run a fill search
         self._hash = None
         self._dimensions = None
-        self._attributes_expanded = False
+        self._lazy_expanded = False
         self._attributes_done = set()  # Attributes we have finished filling.
 
         if dimensions_obj:
@@ -70,12 +70,12 @@ class DimensionsCore(object):
         if not attr in objattr(self, '_attributes'):
             return objattr(self, attr)
         attrib_dict = objattr(self, '__dict__')
-        if attr not in attrib_dict or not objattr(self, '_attributes_expanded'):
+        if attr not in attrib_dict or not objattr(self, '_lazy_expanded'):
             # Attribute has no value, but we haven't expanded all attributes.
             if __debug__: log('"{}" isn\'t set yet on {}', attr, id(self))
-            expand_attributes = objattr(self, '_expand_attributes')
-            expand_attributes(objattr(self, '_orig_data'))
-            set_objattr(self, '_attributes_expanded', True)
+            lazy_expand = objattr(self, '_lazy_expand')
+            lazy_expand(objattr(self, '_orig_data'))
+            set_objattr(self, '_lazy_expanded', True)
         if ((attr not in attrib_dict or not objattr(self, attr))
             and attr not in objattr(self, '_attributes_done')):
             # Attribute still has no value, but we haven't tried searching yet.
@@ -135,7 +135,7 @@ class DimensionsCore(object):
         pass
 
 
-    def _expand_attributes(self, json):
+    def _lazy_expand(self, json):
         '''Method stub for subclasses to override.'''
         pass
 

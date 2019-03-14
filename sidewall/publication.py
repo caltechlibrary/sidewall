@@ -86,8 +86,8 @@ class Publication(DimensionsCore):
         set_objattr(self, 'journal', j, overwrite)
 
 
-    def _expand_attributes(self, data):
-        super()._expand_attributes(data)
+    def _lazy_expand(self, data):
+        super()._lazy_expand(data)
         if __debug__: log('expanding attributes on {} using {}', id(self), data)
         affiliations = objattr(self, 'author_affiliations', [])
         # All cases seen so far have been a list containing another list.
