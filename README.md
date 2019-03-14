@@ -9,7 +9,7 @@ _Sidewall_ is a package for interacting with the [Dimensions](https://app.dimens
 
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg?style=flat-square)](https://choosealicense.com/licenses/bsd-3-clause)
 [![Python](https://img.shields.io/badge/Python-3.5+-brightgreen.svg?style=flat-square)](http://shields.io)
-[![Latest version](https://img.shields.io/badge/Latest_version-0.7.0-b44e88.svg?style=flat-square)](http://shields.io)
+[![Latest version](https://img.shields.io/badge/Latest_version-0.8.0-b44e88.svg?style=flat-square)](http://shields.io)
 
 
 Table of Contents
@@ -137,6 +137,8 @@ The following data classes are defined by Sidewall at this time; note that this 
 * `Organization`
 * `Publication`
 * `Journal`
+* `Grant`
+* several very simple objects: `Category`, `City`, `Country`, `State`
 
 
 #### `Person`
@@ -156,15 +158,17 @@ Dimensions doesn't expose an underlying base class for people; instead, it retur
 
 The following table describes the fields and how they relate to values returned from Dimensions:
 
-|   Field                | Type                   | In `return researchers`? | In `return publications`?      | Filled? |
-|------------------------|------------------------|--------------------------|--------------------------------|--------------------|
-| `affiliations`         | [`Organization`, ...]  | via `research_orgs`       | ✓                              | ✓                  |
-| `current_organization` | `Organization`         | n                        | via `current_organization_id`  | ✓                  |
-| `first_name`           | str                    | ✓                        | ✓                              | n                  |
-| `id`                   | str                    | ✓                        | as `researcher_id`             | n                  |
-| `last_name`            | str                    | ✓                        | ✓                              | n                  |
-| `orcid`                | str                    | as `orcid_id`            | ✓                              | n                  |
-                                      
+|   Field                | Type                   | In `return researchers`? | In `return` `publications`?      | In `return grants`? | Filled? |
+|------------------------|------------------------|--------------------------|--------------------------------|---------------------|---------|
+| `affiliations`         | [`Organization`, ...]  | via `research_orgs`      | ✓                              | ✓                   | ✓       |
+| `current_organization` | `Organization`         | n                        | via `current_organization_id`  | n                   | ✓       |
+| `first_name`           | str                    | ✓                        | ✓                              | ✓                    | n       |
+| `middle_name`          | str                    | n                        | n                              | ✓                   | n       |
+| `id`                   | str                    | ✓                        | as `researcher_id`             | ✓                   | n       |
+| `last_name`            | str                    | ✓                        | ✓                              | ✓                    | n       |
+| `orcid`                | str                    | as `orcid_id`            | ✓                              | `orcid_id`          | ✓       |
+| `role`                 | str                    | n                        | n                              | ✓                   | n       |
+
 The `affiliations` field in Sidewall's `Person` (and consequently `Author` and `Researcher`) is a list of `Organization` class objects (see below).  Although affiliations as returned by Dimensions are sparse when using a query that ends with `return researchers` (they consist only of organization identifiers), Sidewall hides this by providing complete `Organization` objects for the `affiliations` field of a `Person`, and using behind-the-scenes queries to Dimensions to fill out the organization info when the object field values are accessed.  Thus, calling programs do not need to do anything to get organization details in a result regardless of whether they use `return publications` or `return researchers`&mdash;Sidewall always provides `Organization` class objects and handles getting the field values automatically.
 
 To make data access more uniform, Sidewall also replaces the field `current_organization_id` (which in Dimensions is a string, the identifier of an organization) with the field `current_organization`.  Its value is an `Organization` object corresponding to the organization whose identifier is found in `current_organization_id`.
@@ -187,6 +191,8 @@ To make data access more uniform, Sidewall also replaces the field `current_orga
 [<Organization grid.214458.e: 'University of Michigan'>, <Organization grid.20861.3d: 'California Institute of Technology'>, <Organization grid.10392.39: 'University of Tübingen'>]
 >>> 
 ```
+
+Finally, note that the field `role` is present for `Researcher` objects listed only in the context of `Grant` results.  Its value is not filled in other contexts.
 
 
 #### `Organization`
@@ -264,7 +270,7 @@ The `Journal` object class is simple.  It is a direct mapping to the JSON data o
 
 #### `Grant`
 
-... FORTHCOMING ...
+...Forthcoming...
 
 
 ⁇ Getting help and support
