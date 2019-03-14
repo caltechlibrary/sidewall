@@ -141,7 +141,8 @@ class DimensionsCore(object):
 
 
     def __repr__(self):
-        return "<DimensionsCore 0x{0:x}>".format(id(self))
+        obj_id = objattr(self, 'id', id(self))
+        return "<{} {}>".format(self.__class__.__name__, obj_id)
 
 
     def __eq__(self, other):
