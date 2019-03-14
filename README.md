@@ -9,7 +9,7 @@ _Sidewall_ is a package for interacting with the [Dimensions](https://app.dimens
 
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg?style=flat-square)](https://choosealicense.com/licenses/bsd-3-clause)
 [![Python](https://img.shields.io/badge/Python-3.5+-brightgreen.svg?style=flat-square)](http://shields.io)
-[![Latest version](https://img.shields.io/badge/Latest_version-0.8.0-b44e88.svg?style=flat-square)](http://shields.io)
+[![Latest version](https://img.shields.io/badge/Latest_version-0.9.0-b44e88.svg?style=flat-square)](http://shields.io)
 
 
 Table of Contents
@@ -24,8 +24,9 @@ Table of Contents
       * [`Person`](#person), with subclasses `Authors` and `Researchers`
       * [`Organization`](#organization)
       * [`Publication`](#publication)
-      * [`Journal`](#journal)
       * [`Grant`](#grant)
+      * [`Journal`, `Category`, `City`, `Country`, `State`](#journal-category-city-country-state)
+      * [Unsupported Dimensions data types](#unsupported-dimensions-data-types)
 * [Getting help and support](#-getting-help-and-support)
 * [Acknowledgments](#︎-acknowledgments)
 * [Copyright and license](#︎-copyright-and-license)
@@ -162,12 +163,12 @@ The following table describes the fields and how they relate to values returned 
 |------------------------|------------------------|--------------------------|--------------------------------|---------------------|---------|
 | `affiliations`         | [`Organization`, ...]  | via `research_orgs`      | ✓                              | ✓                   | ✓       |
 | `current_organization` | `Organization`         | n                        | via `current_organization_id`  | n                   | ✓       |
-| `first_name`           | str                    | ✓                        | ✓                              | ✓                    | n       |
-| `middle_name`          | str                    | n                        | n                              | ✓                   | n       |
-| `id`                   | str                    | ✓                        | as `researcher_id`             | ✓                   | n       |
-| `last_name`            | str                    | ✓                        | ✓                              | ✓                    | n       |
-| `orcid`                | str                    | as `orcid_id`            | ✓                              | `orcid_id`          | ✓       |
-| `role`                 | str                    | n                        | n                              | ✓                   | n       |
+| `first_name`           | string                 | ✓                        | ✓                              | ✓                    | n       |
+| `middle_name`          | string                 | n                        | n                              | ✓                   | n       |
+| `id`                   | string                 | ✓                        | as `researcher_id`             | ✓                   | n       |
+| `last_name`            | string                 | ✓                        | ✓                              | ✓                    | n       |
+| `orcid`                | string                 | as `orcid_id`            | ✓                              | `orcid_id`          | ✓       |
+| `role`                 | string                 | n                        | n                              | ✓                   | n       |
 
 The `affiliations` field in Sidewall's `Person` (and consequently `Author` and `Researcher`) is a list of `Organization` class objects (see below).  Although affiliations as returned by Dimensions are sparse when using a query that ends with `return researchers` (they consist only of organization identifiers), Sidewall hides this by providing complete `Organization` objects for the `affiliations` field of a `Person`, and using behind-the-scenes queries to Dimensions to fill out the organization info when the object field values are accessed.  Thus, calling programs do not need to do anything to get organization details in a result regardless of whether they use `return publications` or `return researchers`&mdash;Sidewall always provides `Organization` class objects and handles getting the field values automatically.
 
@@ -199,18 +200,18 @@ Finally, note that the field `role` is present for `Researcher` objects listed o
 
 Sidewall uses the object class `Organization` to represent an organization in results returned by Dimensions.  In Sidewall, the set of fields possessed by an `Organization` is the union of all fields that Dimensions provides in different contexts for organizations.  The following table describes the fields and how they relate to values returned from Dimensions:
 
-|   Field         | Type | In "return research_orgs"? | In "return publications"? | Sidewall filled? |
-|-----------------|------|----------------------------|---------------------------|--------------------|
-| `acronym`       | str  | ✓                          | n                         | ✓                  |
-| `city`          | str  | n                          | ✓                         | n                  |
-| `city_id`       | str  | n                          | ✓                         | n                  |
-| `country`       | str  | n                          | ✓                         | n                  |
-| `country_code`  | str  | n                          | ✓                         | n                  |
-| `country_name`  | str  | ✓                          | n                         | ✓                  |
-| `id`            | str  | ✓                          | ✓                         | n                  |
-| `name`          | str  | ✓                          | ✓                         | n                  |
-| `state`         | str  | n                          | ✓                         | n                  |
-| `state_code`    | str  | n                          | ✓                         | n                  |
+|   Field         | Type   | In "return research_orgs"? | In "return publications"? | Sidewall filled? |
+|-----------------|--------|----------------------------|---------------------------|--------------------|
+| `acronym`       | string | ✓                          | n                         | ✓                  |
+| `city`          | string | n                          | ✓                         | n                  |
+| `city_id`       | string | n                          | ✓                         | n                  |
+| `country`       | string | n                          | ✓                         | n                  |
+| `country_code`  | string | n                          | ✓                         | n                  |
+| `country_name`  | string | ✓                          | n                         | ✓                  |
+| `id`            | string | ✓                          | ✓                         | n                  |
+| `name`          | string | ✓                          | ✓                         | n                  |
+| `state`         | string | n                          | ✓                         | n                  |
+| `state_code`    | string | n                          | ✓                         | n                  |
 
 Dimensions returns different field values in different contexts.  For example, the information about organizations included in an author's affiliation list in a publication is somewhat different from what is provided if a search ending in `return research_orgs` is used.  Sidewall makes the assumption that an organization with a given organization identifier ("grid id") is the same organization no matter the context in which it is mentioned in a search result, and so Sidewall smooths over the field differences and, as with `Researcher` and `Author`, queries Dimensions behind the scenes to get missing values when it can (and when they exist).
 
@@ -222,55 +223,108 @@ The `Publication` object class is mostly unchanged from the Dimensions publicati
 
 | Field                        | Type            | In `return publications`? |
 |------------------------------|-----------------|---------------------------|
-| `altmetric`                  | str             | ✓
+| `altmetric`                  | string          | ✓
 | `authors`                    | [`Author`, ...] | via `author_affiliations` |
 | `author_affiliations`        | [`Author`, ...] | via `author_affiliations` |
-| `book_doi`                   | str             | ✓
-| `book_series_title`          | str             | ✓
-| `book_title`                 | str             | ✓
-| `date`                       | str             | ✓
-| `date_inserted`              | str             | ✓
-| `doi`                        | str             | ✓
-| `field_citation_ratio`       | str             | ✓
-| `id`                         | str             | ✓
-| `issn`                       | str             | ✓
-| `issue`                      | str             | ✓
+| `book_doi`                   | string          | ✓
+| `book_series_title`          | string          | ✓
+| `book_title`                 | string          | ✓
+| `date`                       | string          | ✓
+| `date_inserted`              | string          | ✓
+| `doi`                        | string          | ✓
+| `field_citation_ratio`       | string          | ✓
+| `id`                         | string          | ✓
+| `issn`                       | string          | ✓
+| `issue`                      | string          | ✓
 | `journal`                    | `Journal`       | ✓
-| `linkout`                    | str             | ✓
-| `mesh_terms`                 | str             | ✓
-| `open_access`                | str             | ✓
-| `pages`                      | str             | ✓
-| `pmcid`                      | str             | ✓
-| `pmid`                       | str             | ✓
-| `proceedings_title`          | str             | ✓
-| `publisher`                  | str             | ✓
-| `references`                 | str             | ✓
-| `relative_citation_ratio`    | str             | ✓
-| `research_org_country_names` | str             | ✓
-| `research_org_state_names`   | str             | ✓
-| `supporting_grant_ids`       | str             | ✓
-| `times_cited`                | str             | ✓
-| `title`                      | str             | ✓
-| `type`                       | str             | ✓
-| `volume`                     | str             | ✓
-| `year`                       | str             | ✓
+| `linkout`                    | string          | ✓
+| `mesh_terms`                 | string          | ✓
+| `open_access`                | string          | ✓
+| `pages`                      | string          | ✓
+| `pmcid`                      | string          | ✓
+| `pmid`                       | string          | ✓
+| `proceedings_title`          | string          | ✓
+| `publisher`                  | string          | ✓
+| `references`                 | string          | ✓
+| `relative_citation_ratio`    | string          | ✓
+| `research_org_country_names` | string          | ✓
+| `research_org_state_names`   | string          | ✓
+| `supporting_grant_ids`       | string          | ✓
+| `times_cited`                | string          | ✓
+| `title`                      | string          | ✓
+| `type`                       | string          | ✓
+| `volume`                     | string          | ✓
+| `year`                       | string          | ✓
 
 Sidewall's `Publication` objects use a list of `Author` objects to represent authors, and introduce an alias called `authors` for the field `author_affiliations`.  The latter alias is for convenience and an attempt to bring more intuitiveness to the structure of publications records.  (The name `author_affiliations` in the Dimensions data is potentially confusing because the name suggests it may be a list of organizations rather than a list of authors.  Providing a field named `authors` removes this ambiguity.)
 
 
-#### `Journal`
-
-The `Journal` object class is simple.  It is a direct mapping to the JSON data object that Dimensions returns as the value of a publication's `journal` field.
-
-| Field | Type | In `return publications`? |
-|-------|------|---------------------------|
-| id    | str  | ✓                         |
-| title | str  | ✓                         |
-
-
 #### `Grant`
 
-...Forthcoming...
+The `Grant` object in Sidewall maps directly to the entity representing grants in Dimensions.  The fields in `Grants` are all identical to the Dimensions results, and use lists of other objects where appropriate.  For example, the `funders` field is created as a list of `Organization` objects.
+
+| Field                      | Type                  |
+|----------------------------|-----------------------|
+| `FOR`                      | [`Category`, ...]     |
+| `FOR_first`                | [`Category`, ...]     |
+| `HRCS_HC`                  | [`Category`, ...]     |
+| `HRCS_RAC`                 | [`Category`, ...]     |
+| `RCDC`                     | [`Category`, ...]     |
+| `abstract`                 | string                |
+| `active_year`              | [`int`, ...]          |
+| `date_inserted`            | string                |
+| `end_date`                 | string                |
+| `funder_countries`         | [`Country`, ...]      |
+| `funders`                  | [`Organization`, ...] |
+| `funding_aud`              | `float`               |
+| `funding_cad`              | `float`               |
+| `funding_chf`              | `float`               |
+| `funding_eur`              | `float`               |
+| `funding_gbp`              | `float`               |
+| `funding_jpy`              | `float`               |
+| `funding_usd`              | `float`               |
+| `funding_org_acronym`      | string                |
+| `funding_org_city`         | string                |
+| `funding_org_name`         | string                |
+| `id`                       | string                |
+| `language`                 | string                |
+| `linkout`                  | string                |
+| `original_title`           | string                |
+| `project_num`              | string                |
+| `research_org_cities`      | [`City`, ...]         |
+| `research_org_countries`   | [`Country`, ...]      |
+| `research_org_name`        | string                |
+| `research_org_state_codes` | [`State`, ...]        |
+| `research_orgs`            | [`Organization`, ...] |
+| `researchers`              | [`Researcher`, ...]   |
+| `start_date`               | string                |
+| `start_year`               | `int`                 |
+| `title`                    | string                |
+| `title_language`           | string                |
+
+The Dimensions data fields in grant entities have an anomaly in that `funding_org_city` is a string, but cities in another field (`research_org_cities`) are represented as structured objects.  The `Grant` object in Sidewall does not smooth over this inconsistency in its current version, although perhaps it should in a future release.
+
+
+#### `Journal`, `Category`, `City`, `Country`, `State`
+
+Rounding out the classes implemented in Sidewall are a small number of very simple classes used to store data that Dimensions returns in structured form: `Journal`, `Category`, `City`, `Country`, `State`.  They are all basically identical, each containing only two static fields having string values.  In the case of `Journal` one of the fields is named differently (`title` versus `name` for the others).  More specifically, `Journal` has the following form:
+
+| Field | Type   | In `return publications`? |
+|-------|--------|---------------------------|
+| id    | string | ✓                         |
+| title | string | ✓                         |
+
+All of the other classes (`Category`, `City`, `Country`, `State`) have the following form:
+
+| Field | Type   |
+|-------|--------|
+| id    | string |
+| name  | string |
+
+
+#### Unsupported Dimensions data types
+
+As of this version, Sidewall does not offer support for representing Dimensinos policy and patent entities.  This is purely due to resource constraints and not due to an inherent limitation in the Sidewall design.  Future development could easily add new object classes to support these other data entities.
 
 
 ⁇ Getting help and support
