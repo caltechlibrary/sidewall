@@ -28,7 +28,3 @@ class SimpleEntity(DimensionsCore):
         if __debug__: log('setting attributes on {} using {}', id(self), data)
         set_objattr(self, 'id',   data.get('id', ''),    overwrite)
         set_objattr(self, 'name', data.get('name', ''), overwrite)
-
-
-    def __repr__(self):
-        return "<SimpleEntity {}>".format(self.id)

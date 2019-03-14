@@ -136,10 +136,6 @@ class Person(DimensionsCore):
                 set_objattr(self, 'current_organization', org)
 
 
-    def __repr__(self):
-        return "<Person {}: '{} {}'>".format(self.id, self.first_name, self.last_name)
-
-
 def _normalized_orcid(value):
     if isinstance(value, str) and '[' in value:
         # I suspect there's a bug in how I store test cases, but let's

@@ -75,7 +75,3 @@ class Author(Person):
         # up for given publication, so we mark it as done at this point.
         mark_done = objattr(self, '_mark_done')
         mark_done('affiliations')
-
-
-    def __repr__(self):
-        return "<Author {}: '{} {}'>".format(self.id, self.first_name, self.last_name)

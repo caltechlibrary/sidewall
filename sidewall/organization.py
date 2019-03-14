@@ -46,7 +46,3 @@ class Organization(DimensionsCore):
         # Update any missing fields
         set_attributes = objattr(self, '_set_attributes')
         set_attributes(data, overwrite = False)
-
-
-    def __repr__(self):
-        return "<Organization {}>".format(self.id)

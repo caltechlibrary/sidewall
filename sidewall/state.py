@@ -21,5 +21,4 @@ from .simple import SimpleEntity
 
 
 class State(SimpleEntity):
-    def __repr__(self):
-        return "<State {}>".format(self.id)
+    pass

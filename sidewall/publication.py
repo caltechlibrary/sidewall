@@ -115,7 +115,3 @@ class Publication(DimensionsCore):
     def authors(self, alist):
         '''Alias for the "author_affiliations" property on Publication.'''
         self.author_affiliations = alist
-
-
-    def __repr__(self):
-        return "<Publication {}>".format(self.id)

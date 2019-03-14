@@ -28,7 +28,3 @@ class Journal(DimensionsCore):
         if __debug__: log('setting attributes on {} using {}', id(self), data)
         set_objattr(self, 'id',    data.get('id', ''),    overwrite)
         set_objattr(self, 'title', data.get('title', ''), overwrite)
-
-
-    def __repr__(self):
-        return "<Journal {}>".format(self.id)

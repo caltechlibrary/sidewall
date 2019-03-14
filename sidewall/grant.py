@@ -153,35 +153,3 @@ class Grant(DimensionsCore):
             set_attributes(item_data, overwrite = False)
             values.append(obj)
         set_objattr(self, field, values, overwrite)
-
-
-    # def _make_research_orgs_list(self, field, oclass, data, overwrite = True)
-    #     if 'research_orgs' not in data:
-    #         set_objattr(self, 'research_orgs', [])
-    #         return
-    #     try:
-    #         research_orgs = objattr(self, field)
-    #     except:
-    #         research_orgs = []
-    #     dimensions = objattr(self, '_dimensions')
-    #     if dimensions:
-    #         create_object = lambda data: dimensions.factory(Organization, data, self)
-    #     else:
-    #         create_object = lambda data: Organization(data, self)
-    #     if 'researcher_details' not in data:
-    #         for org_data in data['research_orgs']:
-    #             research_orgs.append(create_object(org_data))
-    #         set_objattr(self, 'research_orgs', research_orgs, overwrite)
-    #     else:
-    #         for org_data in data['research_orgs']:
-    #             for researcher_details in data['researcher_details']:
-    #                 for aff_org in researcher_details.get('affiliations', []):
-    #                         if org_data.id == aff_org['id']:
-    #                             research_orgs.append(create_object(aff_org))
-
-
-
-
-
-    def __repr__(self):
-        return "<Grant {}>".format(self.id)

@@ -21,5 +21,4 @@ from .simple import SimpleEntity
 
 
 class Category(SimpleEntity):
-    def __repr__(self):
-        return "<Category {}>".format(self.id)
+    pass
