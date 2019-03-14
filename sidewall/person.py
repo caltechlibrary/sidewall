@@ -56,16 +56,20 @@ from .organization import Organization
 # instead of a single one, and why _fill_record() iterates the way it does.
 
 class Person(DimensionsCore):
-    _new_attributes = ['first_name', 'last_name', 'id', 'orcid', 'current_organization']
+    # The 'middle_name' field does not seem to show up in publication author
+    # or researcher results, but does show up in researchers' lists on grants.
+    _new_attributes = ['first_name', 'middle_name', 'last_name', 'id',
+                       'orcid', 'current_organization']
     _attributes     = _new_attributes + DimensionsCore._attributes
     _search_tmpl    = 'publications where researchers.id="{}" return researchers'
 
 
     def _set_attributes(self, data, overwrite = False):
         if __debug__: log('setting attributes on {} using {}', id(self), data)
-        set_objattr(self, 'first_name',  data.get('first_name', ''), overwrite)
-        set_objattr(self, 'last_name',   data.get('last_name', ''),  overwrite)
-        set_objattr(self, 'id',          dimensions_id(data),        overwrite)
+        set_objattr(self, 'first_name',  data.get('first_name', ''),  overwrite)
+        set_objattr(self, 'middle_name', data.get('middle_name', ''), overwrite)
+        set_objattr(self, 'last_name',   data.get('last_name', ''),   overwrite)
+        set_objattr(self, 'id',          dimensions_id(data),         overwrite)
 
         # Dimensions uses a list for researcher's orcid in some cases but not
         # others.  Why?  Not clear if they ever associate more than one orcid
