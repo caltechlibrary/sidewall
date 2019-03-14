@@ -60,6 +60,19 @@ def matching_record(json, key, obj_id):
         return {}
 
 
+# The following is used all over the place to either use the cache factory
+# to create or return objects, or create new objects without it.  The latter
+# situation comes about if the user invokes objects directly; in that case,
+# they won't be passing a dimensions object to them, so the internal methods
+# cant' use the factory.
+
+def new_object(oclass, data, dimensions, creator):
+    if dimensions:
+        return dimensions.factory(oclass, data, creator)
+    else:
+        return oclass(data, creator)
+
+
 # The following originally came from a posting by user Zero Piraeus here:
 # https://stackoverflow.com/a/25851972/743730
 
