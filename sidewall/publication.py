@@ -28,7 +28,7 @@ file "LICENSE" for more information.
 
 from .author import Author
 from .core import DimensionsCore
-from .data_helpers import objattr, set_objattr
+from .data_helpers import objattr, set_objattr, new_object
 from .debug import log
 from .exceptions import *
 from .journal import Journal
@@ -89,20 +89,15 @@ class Publication(DimensionsCore):
     def _expand_attributes(self, data):
         super()._expand_attributes(data)
         if __debug__: log('expanding attributes on {} using {}', id(self), data)
-        if 'author_affiliations' in data:
-            affiliations = objattr(self, 'author_affiliations', [])
-            # All cases seen so far have been a list containing another list.
-            # I don't understand the point of the double list. Let's be cautious.
-            if len(data['author_affiliations']) > 1:
-                raise DataMismatch('Affiliations list holds more than one list')
-            dimensions = objattr(self, '_dimensions')
-            if dimensions:
-                for a in data['author_affiliations'][0]:
-                    affiliations.append(dimensions.factory(Author, a, self))
-            else:
-                for a in data['author_affiliations'][0]:
-                    affiliations.append(Author(a, self))
-            set_objattr(self, 'author_affiliations', affiliations, overwrite = True)
+        affiliations = objattr(self, 'author_affiliations', [])
+        # All cases seen so far have been a list containing another list.
+        # I don't understand the point of the double list. Let's be cautious.
+        if len(data.get('author_affiliations', [])) > 1:
+            raise DataMismatch('Affiliations list holds more than one list')
+        dimensions = objattr(self, '_dimensions', None)
+        for author_data in data.get('author_affiliations', [[]])[0]:
+            affiliations.append(new_object(Author, author_data, dimensions, self))
+        set_objattr(self, 'author_affiliations', affiliations, overwrite = True)
 
 
     @property

@@ -14,7 +14,7 @@ open-source software released under a 3-clause BSD license.  Please see the
 file "LICENSE" for more information.
 '''
 
-from .data_helpers import objattr, set_objattr
+from .data_helpers import objattr, set_objattr, new_object
 from .debug import log
 from .person import Person
 from .organization import Organization
@@ -62,14 +62,9 @@ class Author(Person):
         super()._expand_attributes(data)
         if __debug__: log('expanding attributes on {} using {}', id(self), data)
         affiliations = objattr(self, 'affiliations', [])
-        if 'affiliations' in data:
-            dimensions = objattr(self, '_dimensions')
-            if dimensions:
-                for org in data['affiliations']:
-                    affiliations.append(dimensions.factory(Organization, org, self))
-            else:
-                for org in data['affiliations']:
-                    affiliations.append(Organization(org, self))
+        dimensions = objattr(self, '_dimensions', None)
+        for org_data in data.get('affiliations', []):
+            affiliations.append(new_object(Organization, org_data, dimensions, self))
         set_objattr(self, 'affiliations', affiliations, overwrite = False)
         # Special case: we do not fill author affiliations beyond what shows
         # up for given publication, so we mark it as done at this point.

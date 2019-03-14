@@ -15,7 +15,7 @@ file "LICENSE" for more information.
 '''
 
 from .author import Author
-from .data_helpers import objattr, set_objattr
+from .data_helpers import objattr, set_objattr, new_object
 from .debug import log
 from .exceptions import *
 from .organization import Organization
@@ -41,7 +41,7 @@ class Researcher(Person):
     def _expand_attributes(self, data):
         # Be careful not to invoke "self.x" b/c it causes infinite recursion.
         if __debug__: log('expanding attributes on {} using {}', id(self), data)
-        # When this comes from a grant, there may be a 'role' field.
+        # When researcher data comes from a grant, there may be a 'role' field.
         set_objattr(self, 'role', data.get('role', ''), overwrite = True)
         self._set_affiliations(data)
 
@@ -56,16 +56,12 @@ class Researcher(Person):
         if field_name not in data or len(data[field_name]) == 0:
             return
         affiliations = objattr(self, 'affiliations', [])
-        dimensions = objattr(self, '_dimensions')
-        if dimensions:
-            new_object = lambda data: dimensions.factory(Organization, data, self)
-        else:
-            new_object = lambda data: Organization(data, self)
+        dimensions = objattr(self, '_dimensions', None)
         for org_data in data[field_name]:
             for existing_org in affiliations:
                 if org_data.id == existing_org.id:
                     existing_org._set_attributes(org_data, overwrite = False)
                     break
             else: # This 'else' is for the inner 'for' loop, not the 'if' stmt.
-                affiliations.append(new_object(org_data))
+                affiliations.append(new_object(Organization, org_data, dimensions, self))
         set_objattr(self, 'affiliations', affiliations, overwrite = True)

@@ -18,7 +18,7 @@ from .category     import Category
 from .city         import City
 from .core         import DimensionsCore
 from .country      import Country
-from .data_helpers import objattr, set_objattr
+from .data_helpers import objattr, set_objattr, new_object
 from .debug        import log
 from .exceptions   import DataMismatch
 from .organization import Organization
@@ -111,8 +111,6 @@ class Grant(DimensionsCore):
         make_objects_list('research_orgs', Organization, data)
         research_orgs = objattr(self, 'research_orgs')
         for researcher in data.get('researcher_details', []):
-            if 'affiliations' not in researcher:
-                continue
             for aff_org in researcher.get('affiliations', []):
                 for res_org in research_orgs:
                     if res_org.id == aff_org['id']:
@@ -129,7 +127,7 @@ class Grant(DimensionsCore):
     def _make_objects_list(self, field, oclass, data, overwrite = True):
         cname = oclass.__name__
         if __debug__: log('creating {} objects for "{}" on {}', cname, field, id(self))
-        if field not in data or not data[field]:
+        if not data.get(field, None):
             if __debug__: log('field "{}" missing or empty {}', field, id(self))
             if overwrite:
                 field_data = []
@@ -143,12 +141,10 @@ class Grant(DimensionsCore):
 
         values = objattr(self, field, [])
         dimensions = objattr(self, '_dimensions')
-        if dimensions:
-            new_object = lambda data: dimensions.factory(oclass, data, self)
-        else:
-            new_object = lambda data: oclass(data, self)
         for item_data in field_data:
-            obj = new_object(item_data)
+            obj = new_object(oclass, item_data, dimensions, self)
+            # Do another round of setting attributes based on the 2nd set of
+            # data that we purposefully pulled out above using the 'field' arg.
             set_attributes = objattr(obj, '_set_attributes')
             set_attributes(item_data, overwrite = False)
             values.append(obj)
