@@ -43,13 +43,15 @@ class Researcher(Person):
         if __debug__: log('expanding attributes on {} using {}', id(self), data)
         # When researcher data comes from a grant, there may be a 'role' field.
         set_objattr(self, 'role', data.get('role', ''), overwrite = True)
-        self._set_affiliations(data)
+        set_affiliations = objattr(self, '_set_affiliations')
+        set_affiliations(data)
 
 
     def _fill_record(self, data):
         # Be careful not to invoke "self.x" b/c it causes infinite recursion.
         if __debug__: log('filling object {} using {}', id(self), data)
-        self._set_affiliations(data)
+        set_affiliations = objattr(self, '_set_affiliations')
+        set_affiliations(data)
 
 
     def _set_affiliations(self, data, field_name = 'research_orgs'):
