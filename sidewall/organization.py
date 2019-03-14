@@ -42,6 +42,7 @@ class Organization(DimensionsCore):
 
 
     def _fill_record(self, data):
+        # Be careful not to invoke "self.x" b/c it causes infinite recursion.
         if __debug__: log('filling object {} using {}', id(self), data)
         # Update any missing fields
         set_attributes = objattr(self, '_set_attributes')

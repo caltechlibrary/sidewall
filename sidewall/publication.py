@@ -87,6 +87,7 @@ class Publication(DimensionsCore):
 
 
     def _lazy_expand(self, data):
+        # Be careful not to invoke "self.x" b/c it causes infinite recursion.
         super()._lazy_expand(data)
         if __debug__: log('expanding attributes on {} using {}', id(self), data)
         affiliations = objattr(self, 'author_affiliations', [])

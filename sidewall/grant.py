@@ -76,6 +76,7 @@ class Grant(DimensionsCore):
 
 
     def _lazy_expand(self, data):
+        # Be careful not to invoke "self.x" b/c it causes infinite recursion.
         super()._lazy_expand(data)
         if __debug__: log('expanding attributes on {} using {}', id(self), data)
         make_objects_list = objattr(self, '_make_objects_list')
@@ -118,6 +119,7 @@ class Grant(DimensionsCore):
 
 
     def _fill_record(self, data):
+        # Be careful not to invoke "self.x" b/c it causes infinite recursion.
         if __debug__: log('filling object {} using {}', id(self), data)
         # Update any missing fields
         set_attributes = objattr(self, '_set_attributes')

@@ -99,6 +99,7 @@ class Person(DimensionsCore):
     #                       'name': 'Lawrence Berkeley National Laboratory'}]}
 
     def _lazy_expand(self, data):
+        # Be careful not to invoke "self.x" b/c it causes infinite recursion.
         super()._lazy_expand(data)
         if __debug__: log('expanding attributes on {} using {}', id(self), data)
         org_from_data = objattr(self, '_org_from_data')
@@ -106,6 +107,7 @@ class Person(DimensionsCore):
 
 
     def _fill_record(self, data):
+        # Be careful not to invoke "self.x" b/c it causes infinite recursion.
         if __debug__: log('filling object {} using {}', id(self), data)
         if not objattr(self, 'orcid') and 'orcid_id' in data:
             set_attributes = objattr(self, '_set_attributes')
