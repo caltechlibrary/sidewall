@@ -61,10 +61,7 @@ class Author(Person):
     def _expand_attributes(self, data):
         super()._expand_attributes(data)
         if __debug__: log('expanding attributes on {} using {}', id(self), data)
-        try:
-            affiliations = objattr(self, 'affiliations')
-        except:
-            affiliations = []
+        affiliations = objattr(self, 'affiliations', [])
         if 'affiliations' in data:
             dimensions = objattr(self, '_dimensions')
             if dimensions:

@@ -90,10 +90,7 @@ class Publication(DimensionsCore):
         super()._expand_attributes(data)
         if __debug__: log('expanding attributes on {} using {}', id(self), data)
         if 'author_affiliations' in data:
-            try:
-                affiliations = objattr(self, 'author_affiliations')
-            except:
-                affiliations = []
+            affiliations = objattr(self, 'author_affiliations', [])
             # All cases seen so far have been a list containing another list.
             # I don't understand the point of the double list. Let's be cautious.
             if len(data['author_affiliations']) > 1:
