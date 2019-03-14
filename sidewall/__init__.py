@@ -23,8 +23,13 @@ from .debug        import set_debug
 from .dimensions   import dimensions, queryresults
 
 from .author       import Author
+from .category     import Category
+from .city         import City
+from .country      import Country
+from .grant        import Grant
 from .journal      import Journal
 from .organization import Organization
 from .person       import Person
 from .publication  import Publication
 from .researcher   import Researcher
+from .state        import State
