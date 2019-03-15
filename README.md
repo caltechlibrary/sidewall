@@ -102,7 +102,7 @@ Sidewall defines a method, `query()`, which you can use to run a search in Dimen
 results = dimensions.query('search publications for "SBML" return publications')
 ```
 
-The form of the search query string that Sidewall can use is limited in ways described shortly.  The `query()` method returns a Python iterator object so that you iterate over the results, taken the `len()`, and do other typical operations.
+The form of the search query string that Sidewall can use is limited in ways described shortly.  The `query()` method returns a Python iterator object so that you iterate over the results, take the `len()`, and do other typical operations.
 
 The items returned by the iterator will be Sidewall objects of the kind discussed in the section below on [Data mappings]().  The specific classes of objects returned will correspond to the type of record expressed in the tail end of the query handed to `query()`.  For example, a query that ends in `return publications` will produce Sidewall `Publications` objects; a query that ends in `return researchers` will produce Sidewall `Researcher` objects; and so on.
 
@@ -144,7 +144,7 @@ The following data classes are defined by Sidewall at this time; note that this 
 
 #### `Person`
 
-Dimensions doesn't expose an underlying base class for people; instead, it returns unnamed data structures that basically refer to people in different contexts.  Sidewall currently understands two such contexts: authors of publications (when a query uses `return publications`), and "researchers" (when a query uses `return researchers`).  Sidewall introduces a parent class called `Person` because the objects in these two contexts are so similar, and provides two derived classes: `Author` and `Researcher`.  Both of the derived classes have the same fields.  The distinction provided by the derived classes is necessary because **the list of affiliations for an `Author` is relative to a particular publication and may not be all the affiliations that a person has**.  Thus, affiliations for authors must be understood in the context of a particular search for publications.  The use of two classes indicates the context, so that callers can correctly interpret the list of affiliations.
+Dimensions doesn't expose an underlying base class for people; instead, it returns unnamed data structures that basically refer to people in different contexts.  Sidewall currently understands two such contexts: authors of publications (when a query uses `return publications`), and "researchers" (when a query uses `return researchers` or objects such as `Grant` contain "researchers" as a data field).  Sidewall introduces a parent class called `Person` because the objects in these two contexts are so similar, and provides two derived classes: `Author` and `Researcher`.  Both of the derived classes have the same fields.  The distinction provided by the derived classes is necessary because **the list of affiliations for an `Author` is relative to a particular publication and may not be all the affiliations that a person has**.  Thus, affiliations for authors must be understood in the context of a particular search for publications.  The use of two classes indicates the context, so that callers can correctly interpret the list of affiliations.
 
 ```
            ┌──────────────┐
@@ -324,7 +324,7 @@ All of the other classes (`Category`, `City`, `Country`, `State`) have the follo
 
 #### Unsupported Dimensions data types
 
-As of this version, Sidewall does not offer support for representing Dimensinos policy and patent entities.  This is purely due to resource constraints and not due to an inherent limitation in the Sidewall design.  Future development could easily add new object classes to support these other data entities.
+As of this version, Sidewall does not offer support for representing Dimensions policy and patent entities.  This is purely due to resource constraints and not due to an inherent limitation in the Sidewall design.  Future development could easily add new object classes to support these other data entities.
 
 
 ⁇ Getting help and support
@@ -340,6 +340,7 @@ The [vector artwork](https://commons.wikimedia.org/wiki/File:Tire_code_-_en.svg)
 
 Sidewall makes use of numerous open-source packages, without which it would have been effectively impossible to develop Sidewall with the resources we had.  We want to acknowledge this debt.  In alphabetical order, the packages are:
 
+* [humanize](https://github.com/jmoiron/humanize) &ndash; print numbers in a human-friendly format
 * [keyring](https://github.com/jaraco/keyring) &ndash; access the system keyring service from Python
 * [requests](http://docs.python-requests.org) &ndash; an HTTP library for Python
 * [setuptools](https://github.com/pypa/setuptools) &ndash; library for `setup.py`
