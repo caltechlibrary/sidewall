@@ -61,7 +61,7 @@ class Researcher(Person):
         dimensions = objattr(self, '_dimensions', None)
         for org_data in data[field_name]:
             for existing_org in affiliations:
-                if org_data.id == existing_org.id:
+                if org_data['id'] == existing_org.id:
                     existing_org._set_attributes(org_data, overwrite = False)
                     break
             else: # This 'else' is for the inner 'for' loop, not the 'if' stmt.
