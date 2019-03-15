@@ -1,6 +1,18 @@
 '''
 dimensions.py: Dimensions communication code for Sidewall
 
+Implementation notes
+--------------------
+
+Sidewall caches the returned values of Dimensions queries as well as the data
+objects created by Sidewall.  Not all objects are persisted, because some
+objects only make sense when interpreted in the context of a query.  Only
+those classes that use the mixin "Persistable" are stored.
+
+Currently, the cache is simply a Python dict and it is not saved to disk.  A
+future enhancement would be to provide a way to save the values to disk so
+that they can be retained across invocations of Sidewall.
+
 Authors
 -------
 
@@ -98,6 +110,13 @@ class Dimensions(Singleton):
         '''Store credentials for using the Dimensions network API.
         If values for 'username' and 'password' are not provided, this will
         ask the user for them interactively.  Values will be stored in the
+        user's keychain/keyring, unless the parameter use_keyring = False.
+
+        To reset the user name and password (e.g., if a mistake was made the
+        last time and the wrong credentials were stored in the
+        keyring/keychain system), invoke this method with reset_keyring = True.
+        It will then query for the user name and password again, even if values
+        already exist in the keyring or keychain.
         '''
         if __debug__: log('user = {}, pass = {}', username, 'X' if password else '')
         self._use_keyring = use_keyring
@@ -119,35 +138,6 @@ class Dimensions(Singleton):
             self._dimensions_token = data['token']
         else:
             raise AuthenticationFailure('Dimensions did not return a token')
-
-
-    _strip_whitespace = str.maketrans('', '', string.whitespace)
-
-    def record_search(self, query, id, retry = 1):
-        if __debug__: log('initiating record search involving {}'.format(id))
-        search = 'search ' + query.format(id)
-        key = search.translate(self._strip_whitespace)
-        if key in self._cache:
-            if __debug__: log("returning cached value for '{}'", search)
-            return self._cache[key]
-
-        data = self._post(search)
-        if __debug__: log('response: {}', data)
-        self._cache[key] = data
-        if data == {}:
-            return {}
-        # Due to the fact that the results may not be unique and contain a
-        # single record, we end up having to search for the record matching
-        # the id we're interested in. The type results from Dimensions will
-        # be of the form {'_stats': ..., 'TYPE': [...]} where TYPE is the
-        # kind of entity in question.
-        result_keys = list_diff(list(data.keys()), ['_stats'])
-        if len(result_keys) > 1:
-            raise DataMismatch('Unexpected keys in Dimensions results: {}'
-                               .format(list(data.keys())))
-        if len(result_keys) == 0:
-            return {}
-        return matching_record(data, result_keys[0], id)
 
 
     def query(self, query_string, limit_results = None, fetch_size = _FETCH_SIZE):
@@ -214,8 +204,39 @@ class Dimensions(Singleton):
                             total, data, result_type, fetch_size)
 
 
+    _strip_whitespace = str.maketrans('', '', string.whitespace)
+
+    def record_search(self, query, id, retry = 1):
+        '''Internal method for filling in missing data field values.'''
+        if __debug__: log('initiating record search involving {}'.format(id))
+        search = 'search ' + query.format(id)
+        key = search.translate(self._strip_whitespace)
+        if key in self._cache:
+            if __debug__: log("returning cached value for '{}'", search)
+            return self._cache[key]
+
+        data = self._post(search)
+        if __debug__: log('response: {}', data)
+        self._cache[key] = data
+        if data == {}:
+            return {}
+        # Due to the fact that the results may not be unique and contain a
+        # single record, we end up having to search for the record matching
+        # the id we're interested in. The type results from Dimensions will
+        # be of the form {'_stats': ..., 'TYPE': [...]} where TYPE is the
+        # kind of entity in question.
+        result_keys = list_diff(list(data.keys()), ['_stats'])
+        if len(result_keys) > 1:
+            raise DataMismatch('Unexpected keys in Dimensions results: {}'
+                               .format(list(data.keys())))
+        if len(result_keys) == 0:
+            return {}
+        return matching_record(data, result_keys[0], id)
+
+
     def _post(self, query, retry = 1):
-        '''Post the 'query' to the server and return the result as a dict.
+        '''Internal method to post the 'query' string to the server and return
+        the result as a dict.
         '''
         if __debug__: log("posting query to server: '{}'", query)
         headers = {'Authorization': "JWT " + self._dimensions_token}
@@ -276,6 +297,7 @@ class Dimensions(Singleton):
 
 
     def _password(self, prompt):
+        '''Ask the user for a password interactively.'''
         # If it's a tty, use the version that doesn't echo the password.
         if sys.stdin.isatty():
             return getpass.getpass(prompt)
