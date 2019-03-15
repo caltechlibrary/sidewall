@@ -42,16 +42,18 @@ print('Sending query to Dimensions')
 results = dimensions.query('search publications where research_orgs.id = "grid.20861.3d" return publications')
 
 print('Dimensions query found {} publications'.format(len(results)))
-
-print('-'*70)
 print('Finding publication authors that have Caltech affiliations')
-print('')
+
+print('-'*79)
+print('{:8} {:<30} {:20} {:20}'.format('#', 'Name', 'ORCID', 'Dimensions ID'))
+print('-'*79)
 count = 0
 for publication in results:
     for author in publication.authors:
         if "grid.20861.3d" in [org.id for org in author.affiliations]:
             count += 1
             full_name = author.last_name + ', ' + author.first_name
-            print('[{:6}] {:<30} {:20}'.format(count, full_name, author.orcid))
+            print('[{:6}] {:<30} {:20} {:20}'.format(count, full_name,
+                                                     author.orcid, author.id))
 
 print('Done.')
