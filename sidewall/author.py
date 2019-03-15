@@ -1,6 +1,10 @@
 '''
 author.py: representation of an author record
 
+Author class objects are returned when returning publication results, and
+in those cases, the list of a person's affiliations will reflect their
+affiliations with respect to a particular publication.
+
 Authors
 -------
 

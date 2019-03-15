@@ -1,6 +1,11 @@
 '''
 grant.py: representation of a grant
 
+The 'Grant' object in Sidewall maps directly to the entity representing grants
+in Dimensions.  The fields in 'Grants' are all identical to the Dimensions
+results, and use lists of other objects where appropriate.  For example, the
+'funders' field is created as a list of 'Organization' objects.
+
 Authors
 -------
 

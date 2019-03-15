@@ -1,6 +1,53 @@
 '''
 person.py: base class for people records in Sidewall
 
+Dimensions doesn't expose an underlying base class for people; instead, it
+returns unnamed data structures that basically refer to people in different
+contexts.  Sidewall currently understands two such contexts: authors of
+publications (when a query uses 'return publications'), and "researchers"
+(when a query uses 'return researchers' or objects such as 'Grant' contain
+"researchers" as a data field).  Sidewall introduces a parent class called
+'Person' because the objects in these two contexts are so similar, and
+provides two derived classes: 'Author' and 'Researcher'.  Both of the derived
+classes have the same fields.  The distinction provided by the derived
+classes is necessary because the list of affiliations for an 'Author' is
+relative to a particular publication and may not be all the affiliations that
+a person has.  Thus, affiliations for authors must be understood in the
+context of a particular search for publications.  The use of two classes
+indicates the context, so that callers can correctly interpret the list of
+affiliations.
+
+           ┌──────────────┐
+           │    Person    │
+           └──────────────┘
+                  ^
+        ┌─────────┴──────────┐
+┌───────┴──────┐      ┌──────┴───────┐
+│    Author    │      │  Researcher  │
+└──────────────┘      └──────────────┘
+
+The 'affiliations' field in Sidewall's 'Person' (and consequently 'Author'
+and 'Researcher') is a list of 'Organization' class objects.  Although
+affiliations as returned by Dimensions are sparse when using a query that
+ends with 'return researchers' (they consist only of organization
+identifiers), Sidewall hides this by providing complete 'Organization'
+objects for the 'affiliations' field of a 'Person', and using
+behind-the-scenes queries to Dimensions to fill out the organization info
+when the object field values are accessed.  Thus, calling programs do not
+need to do anything to get organization details in a result regardless of
+whether they use 'return publications' or 'return researchers' -- Sidewall
+always provides 'Organization' class objects and handles getting the field
+values automatically.
+
+To make data access more uniform, Sidewall also replaces the field
+'current_organization_id' (which in Dimensions is a string, the identifier of
+an organization) with the field 'current_organization'.  Its value is an
+'Organization' object corresponding to the organization whose identifier is
+found in 'current_organization_id'.
+
+Implementation notes
+--------------------
+
 This uses _fill_record() to update our object using a search template that
 searches for a researcher by their Dimensions id.  The main reason for doing
 this behind-the-scenes filling is the following.  It turns out that if you do

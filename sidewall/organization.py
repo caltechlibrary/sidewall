@@ -1,6 +1,18 @@
 '''
 organization.py: representation of an organization record
 
+Sidewall uses the object class 'Organization' to represent an organization in
+results returned by Dimensions.  In Sidewall, the set of fields possessed by
+an 'Organization' is the union of all fields that Dimensions provides in
+different contexts for organizations.  For example, the information about
+organizations included in an author's affiliation list in a publication is
+somewhat different from what is provided if a search ending in `return
+research_orgs` is used.  Sidewall makes the assumption that an organization
+with a given organization identifier ("grid id") is the same organization no
+matter the context in which it is mentioned in a search result, and so
+Sidewall smooths over the field differences and queries Dimensions behind the
+scenes to get missing values when it can (and when they exist).
+
 Authors
 -------
 
