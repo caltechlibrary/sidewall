@@ -153,21 +153,30 @@ class Dimensions(Singleton):
     def query(self, query_string, limit_results = None, fetch_size = _FETCH_SIZE):
         '''Issue the DSL 'query_string' to Dimensions and return an iterator
         for the results.  Each item in the results will be an object such as
-        Researcher, Publication, etc.  The query string must end in one of
-        the types recognized by Sidewall.
+        Researcher, Publication, etc.
+
+        The query string must end in one of the types recognized by Sidewall,
+        and must not end with "limit" and/or "skip" statements.  To limit the
+        number of results obtained, use the 'limit_results' parameter.
+
+        The number of results fetched per network access can be set using the
+        parameter 'fetch_size'.  The maximum is 1000; this is set by the
+        Dimensions service.
         '''
 
         # Begin with some sanity checks
         if not query_string.startswith('search'):
             raise RequestError('Query must begin with "search"')
+        if fetch_size > 1000:
+            raise RequestError('Dimensions does not accept fetch_size > 1000"')
+        # Remove result limits in the query because we need to handle that.
+        limit_skip = r'limit\s+[0-9]+(\s+skip\s+[0-9]+)?'
+        if re.search(limit_skip, query_string):
+            query_string = re.sub(limit_skip, '', query_string).strip()
         result_type = self._result_type(query_string)
         if not result_type:
             txt = 'Unsupported result type -- can only handle "{}"'
             raise RequestError(txt.format('", "'.join(_KNOWN_RESULT_TYPES) + '.'))
-
-        # Remove result limits in the query because we need to handle that.
-        if re.search(r'limit\s+[0-9]+(\s+skip\s+[0-9]+)?', query_string):
-            query = re.sub(r'limit\s+[0-9]+(\s+skip\s+[0-9]+)?', '', query_string).strip()
 
         # Prepare the first query to get the first set of results.
         if limit_results and limit_results < fetch_size:
@@ -178,7 +187,7 @@ class Dimensions(Singleton):
         # Need run the first query here, to get the total_count.
         data = self._post(first_query)
         if result_type not in data:
-            raise DataMismatch('Data from Dimensions does not have expected result type')
+            raise DataMismatch('Data from Dimensions does not have expected type')
         if len(data[result_type]) == 0:
             raise DataMismatch('Data inconsistency in results from Dimensions')
         if '_stats' not in data:
