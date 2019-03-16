@@ -12,6 +12,20 @@ def dimensions_id(data):
     return data.get('id') or data.get('researcher_id') or ''
 
 
+# Class definitions
+# .............................................................................
+
+# The original code for the following function was posted by user "c z" at
+# https://stackoverflow.com/a/47713336/743730 on 2017-12-07.
+
+class Default:
+    '''Class used to indicate whether a default parameter value was used.'''
+    def __repr__( self ):
+        return "DEFAULT"
+
+DEFAULT = Default()
+
+
 # General-purpose functions
 # .............................................................................
 
@@ -19,12 +33,12 @@ def dimensions_id(data):
 # used in code called from core.__getattr__ and core.__getattribute__ because
 # in those cases if you simply involke "self.x" you get infinite recursion.
 
-def objattr(obj, attr, default = None):
+def objattr(obj, attr, default = DEFAULT):
     '''Return the value of the attribute 'attr' on 'obj'.  If 'default' is
     given, return that value if there is no 'attr' on 'obj'; if 'default' is
     not given, raise an exception instead.
     '''
-    if default is not None:
+    if default is not DEFAULT:
         try:
             return object.__getattribute__(obj, attr)
         except:
