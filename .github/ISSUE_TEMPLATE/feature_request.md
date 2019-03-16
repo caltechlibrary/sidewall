@@ -7,6 +7,15 @@ assignees: ''
 
 ---
 
+---
+name: Feature request
+about: Suggest an idea for this project
+title: ''
+labels: ''
+assignees: ''
+
+---
+
 ### Is your feature request related to a problem? Please describe.
 
 _Please provide a clear and concise description of what the problem is. E.g. "I'm always frustrated when [...]"_
@@ -21,4 +30,4 @@ _Please provide a clear and concise description of any alternative solutions or 
 
 ### Additional context
 
-_Please include add any other context or screenshots about the feature request here._
+_Please include add any other context about the feature request here._
