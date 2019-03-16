@@ -141,6 +141,14 @@ for pub in results:
     print('{}: {}'.format(pub.year, pub.doi))
 ```
 
+Sidewall will return an interator that will (if iterated) obtain all the results for a given Dimensions query, up to the limit of 50,000 imposed by the Dimensions API.  If you want to limit the number of results, set a value for the keyword argument `limit_results` to `query(...)`.  For example,
+
+```python
+results = dimensions.query('search publications for "SBML" return publications', limit_results = 1000)
+```
+
+Finally, Dimensions imposes an API rate limit, which is currently 30 calls/minute.  Each query counts as one, but keep in mind that certain data accesses on the results returned by Sidewall _also_ cause API accesses, for objects that Sidewall attempts to expand when field values are missing, and iterating over thousands of results also causes multiple API calls to fetch the results in batches.  Consequently, you may encounter the API limit sooner than realized.  Sidewall will automatically pause and wait when it hits the rate limit, which may have the effect of causing your program to hang temporarily while it waits until it can contact the server again.
+
 
 ### Data mappings
 
@@ -347,9 +355,9 @@ As of this version, Sidewall does not offer support for representing Dimensions 
 ⚛︎ Implementation notes and debugging tips
 -----------------------------------------
 
-Sidewall is not guaranteed to be bug-free, and problems may still lurk in the code.  If you get results that don't make sense (particularly results such as empty field values), the following tips may help you investigate and debug what is happening.
+Sidewall is not guaranteed to be trouble-free, and bugs may still lurk in the code.  If you get results that don't make sense (particularly results such as empty field values), the following tips may help you investigate and debug what is happening.
 
-1. Test your query in the online Dimensions API console, and examine the values of the data returned.
+1. First, test your query in the online Dimensions API console, and examine the values of the data returned.
 2. Compare the results from the console to the values produced by Sidewall.  Often, objects created by Sidewall have missing field values because a given query in Dimensions _really does_ produce entities that are not entirely filled out.
 3. If there's a discrepancy between what you see in Sidewall and what you see in the Dimensions API console,
     1. Create the simplest possible test case. Often, this involves calling `dimensions.query(...)` followed by examining a value in a returned object.
