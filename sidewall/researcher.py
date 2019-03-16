@@ -32,7 +32,8 @@ class Researcher(Person):
             # We're given an author object, probably obtained from a pub search,
             # and we want to fill it out to create a Researcher object.
             if __debug__: log('converting Author {} to Researcher', id(data))
-            super().__init__(data._orig_data, creator, dimensions_obj)
+            dimensions = objattr(data, '_dimensions', None)
+            super().__init__(data._orig_data, data, dimensions)
         else:
             # This is a standard initialization, not a case of upconverting.
             super().__init__(data, creator, dimensions_obj)
@@ -41,6 +42,7 @@ class Researcher(Person):
     def _lazy_expand(self, data):
         # Be careful not to invoke "self.x" b/c it causes infinite recursion.
         if __debug__: log('expanding attributes on {} using {}', id(self), data)
+        super()._lazy_expand(data)
         # When researcher data comes from a grant, there may be a 'role' field.
         set_objattr(self, 'role', data.get('role', ''), overwrite = True)
         set_affiliations = objattr(self, '_set_affiliations')
@@ -59,11 +61,22 @@ class Researcher(Person):
             return
         affiliations = objattr(self, 'affiliations', [])
         dimensions = objattr(self, '_dimensions', None)
-        for org_data in data[field_name]:
-            for existing_org in affiliations:
-                if org_data['id'] == existing_org.id:
-                    existing_org._set_attributes(org_data, overwrite = False)
-                    break
-            else: # This 'else' is for the inner 'for' loop, not the 'if' stmt.
-                affiliations.append(new_object(Organization, org_data, dimensions, self))
+        if isinstance(data[field_name][0], str):
+            # Case 1: it's a list of grid id's.
+            for org_id in data[field_name]:
+                for existing_org in affiliations:
+                    if org_id == existing_org.id:
+                        # Nothing more to do, b/c all we have is the id.
+                        break
+                else: # This 'else' is for the inner 'for' loop, not the 'if' stmt.
+                    affiliations.append(new_object(Organization, {'id': org_id}, dimensions, self))
+        else:
+            # Case 2: it's a list of dict's containing org field/value data.
+            for org_data in data[field_name]:
+                for existing_org in affiliations:
+                    if org_data['id'] == existing_org.id:
+                        existing_org._set_attributes(org_data, overwrite = False)
+                        break
+                else: # This 'else' is for the inner 'for' loop, not the 'if' stmt.
+                    affiliations.append(new_object(Organization, org_data, dimensions, self))
         set_objattr(self, 'affiliations', affiliations, overwrite = True)
