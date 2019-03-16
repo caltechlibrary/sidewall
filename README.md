@@ -215,7 +215,7 @@ Finally, note that the field `role` is present for `Researcher` objects listed o
 
 Sidewall uses the object class `Organization` to represent an organization in results returned by Dimensions.  In Sidewall, the set of fields possessed by an `Organization` is the union of all fields that Dimensions provides in different contexts for organizations.  The following table describes the fields and how they relate to values returned from Dimensions:
 
-|   Field         | Type   | In "return research_orgs"? | In "return publications"? | Sidewall filled? |
+|   Field         | Type   | In `return research_orgs`? | In `return publications`? | Sidewall expanded? |
 |-----------------|--------|----------------------------|---------------------------|--------------------|
 | `acronym`       | string | ✓                          | n                         | ✓                  |
 | `city`          | string | n                          | ✓                         | n                  |
@@ -227,6 +227,8 @@ Sidewall uses the object class `Organization` to represent an organization in re
 | `name`          | string | ✓                          | ✓                         | n                  |
 | `state`         | string | n                          | ✓                         | n                  |
 | `state_code`    | string | n                          | ✓                         | n                  |
+
+("Sidewall expanded" &rArr; filled or expanded by Sidewall via search if needed.)
 
 Dimensions returns different field values in different contexts.  For example, the information about organizations included in an author's affiliation list in a publication is somewhat different from what is provided if a search ending in `return research_orgs` is used.  Sidewall makes the assumption that an organization with a given organization identifier ("grid id") is the same organization no matter the context in which it is mentioned in a search result, and so Sidewall smooths over the field differences and, as with `Researcher` and `Author`, queries Dimensions behind the scenes to get missing values when it can (and when they exist).
 
