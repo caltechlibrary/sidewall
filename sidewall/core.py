@@ -123,10 +123,7 @@ class DimensionsCore(object):
     def _mark_done(self, attr):
         if __debug__: log('marking "{}" as final on {}', attr, id(self))
         done = objattr(self, '_attributes_done')
-        if isinstance(attr, list):
-            done.update(attr)
-        else:
-            done.add(attr)
+        done.update(attr if isinstance(attr, list) else [attr])
         set_objattr(self, '_attributes_done', done)
 
 
