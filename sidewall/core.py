@@ -78,13 +78,15 @@ class DimensionsCore(object):
             set_objattr(self, '_lazy_expanded', True)
         if ((attr not in attrib_dict or not objattr(self, attr))
             and attr not in objattr(self, '_attributes_done')):
+            if __debug__: log('still missing value for "{}" on {}', attr, id(self))
             # Attribute still has no value, but we haven't tried searching yet.
             # All the methods for this approach need a Dimensions id.
-            dim = objattr(self, '_dimensions')
-            dim_id = objattr(self, 'id')
+            dim = objattr(self, '_dimensions', None)
+            dim_id = objattr(self, 'id', None)
             mark_done = objattr(self, '_mark_done')
-            if dim and dim_id:
-                if __debug__: log('still missing value for "{}" on {}', attr, id(self))
+            if not dim:
+                if __debug__: log("missing _dimensions on {} -- can't search", id(self))
+            elif dim_id:
                 try:
                     # If we know of a way to expand values on this object, there
                     # will be a class attribute providing a search template.
@@ -92,6 +94,7 @@ class DimensionsCore(object):
                 except:
                     if __debug__: log("no search template -- can't fill in values")
                 else:
+                    if __debug__: log('will try searching for "{}"', attr)
                     search = objattr(dim, 'record_search')
                     search_results = search(search_tmpl, dim_id)
                     # Store the results on this object, to help debugging.
@@ -127,11 +130,11 @@ class DimensionsCore(object):
 
     def _mark_done_attributes(self):
         # Mark attributes that have been set AND have a non-null value.
+        if __debug__: log('updating _attributes_done list on {}', id(self))
         done = objattr(self, '_attributes_done')
         for attr in objattr(self, '_attributes'):
             if attr in self.__dict__ and objattr(self, attr):
                 done.add(attr)
-        if __debug__: log('updated _attributes_done list on {}: {}', id(self), done)
         set_objattr(self, '_attributes_done', done)
 
 
