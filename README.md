@@ -40,6 +40,7 @@ Table of Contents
       * [`Grant`](#grant)
       * [`Journal`, `Category`, `City`, `Country`, `State`](#journal-category-city-country-state)
       * [Unsupported Dimensions data types](#unsupported-dimensions-data-types)
+* [Implementation notes and debugging tips](#︎-implementation-notes-and-debugging-tips)
 * [Getting help and support](#-getting-help-and-support)
 * [Acknowledgments](#︎-acknowledgments)
 * [Copyright and license](#︎-copyright-and-license)
@@ -339,6 +340,21 @@ All of the other classes (`Category`, `City`, `Country`, `State`) have the follo
 #### Currently unsupported Dimensions data types
 
 As of this version, Sidewall does not offer support for representing Dimensions policy and patent entities.  This is purely due to resource constraints and not due to an inherent limitation in the Sidewall design.  Future development could easily add new object classes to support these other data entities.
+
+
+⚛︎ Implementation notes and debugging tips
+-----------------------------------------
+
+Sidewall is not guaranteed to be bug-free, and problems may still lurk in the code.  If you get results that don't make sense (particularly results such as empty field values), the following tips may help you investigate and debug what is happening.
+
+1. Test your query in the online Dimensions API console, and examine the values of the data returned.
+2. Compare the results from the console to the values produced by Sidewall.  Often, objects created by Sidewall have missing field values because a given query in Dimensions _really does_ produce entities that are not entirely filled out.
+3. If there's a discrepancy between what you see in Sidewall and what you see in the Dimensions API console,
+    1. Create the simplest possible test case. Often, this involves calling `dimensions.query(...)` followed by examining a value in a returned object.
+    2. Insert `sidewall.set_debug(True)` right before a call to access a value.
+    3. Run the test case again and examine the debug trace.
+
+The debug trace will be voluminous, but it contains information about methods being called and the data they work with.  By following the steps, it is often possible to narrow down the cause of incomplete data objects.  Look in particular at calls to `_lazy_expand()` and the data passed in the call, to see if that data contains values for the field in question; also look for calls to `_record_search()` and `_fill_record()`, which are the two functions that handle trying to fill in values behind the scenes when a query returns objects with missing field values.
 
 
 ⁇ Getting help and support
