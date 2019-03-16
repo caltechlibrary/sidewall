@@ -106,8 +106,6 @@ class DimensionsCore(object):
                             # fills all attributes to the extent possible.
                             # We mark them all as done so we don't try again.
                             attributes_filled = objattr(self, '_new_attributes', [])
-                            if __debug__: log('marking filled attributes: {}',
-                                              attributes_filled)
                             mark_done(attributes_filled)
                         except:
                             pass
