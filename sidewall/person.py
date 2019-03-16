@@ -168,14 +168,15 @@ class Person(DimensionsCore):
         org_id = data.get('current_organization_id', None)
         if org_id:
             org_record = {'id': org_id} # Fallback value.
+            dimensions = objattr(self, '_dimensions', None)
             # If there's an affiliations list, one of them might contain
             # richer info about the organization. Let's try to find it.
             if 'affiliations' in data:
                 org_record = matching_record(data, 'affiliations', org_id)
-            dimensions = objattr(self, '_dimensions', None)
-            return new_object(Organization, org_record, dimensions, self)
-        else:
-            return None
+                if org_record:
+                    return new_object(Organization, org_record, dimensions, self)
+            return new_object(Organization, {'id': org_id}, dimensions, self)
+        return None
 
 
 def _normalized_orcid(value):
