@@ -194,17 +194,16 @@ To make data access more uniform, Sidewall also replaces the field `current_orga
 >>> import sidewall
 >>> from sidewall import dimensions, Researcher
 >>> dimensions.login()
->>> results = dimensions.query('search publications in title_only for "SBML" where year=2003 return publications')
->>> pub1 = next(results)
->>> author1 = pub1.authors[0]
+>>> pubs = dimensions.query('search publications in title_only for "SBML" where year=2003 return publications')
+>>> pub = next(pubs)
+>>> author1 = pub.authors[0]
 >>> author1
-<Author ur.0665132124.52: 'M. Hucka'>
+<Author ur.0665132124.52>
 >>> author1.affiliations
 []
 >>> researcher1 = Researcher(author1)
 >>> researcher1.affiliations
-[<Organization grid.214458.e: 'University of Michigan'>, <Organization grid.20861.3d: 'California Institute of Technology'>, <Organization grid.10392.39: 'University of Tübingen'>]
->>> 
+[<Organization grid.20861.3d>, <Organization grid.10392.39>, <Organization grid.214458.e>]
 ```
 
 Finally, note that the field `role` is present for `Researcher` objects listed only in the context of `Grant` results.  Its value is not filled in other contexts.
