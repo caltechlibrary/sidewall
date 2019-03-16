@@ -9,8 +9,22 @@ _Sidewall_ is a package for interacting with the [Dimensions](https://app.dimens
 
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg?style=flat-square)](https://choosealicense.com/licenses/bsd-3-clause)
 [![Python](https://img.shields.io/badge/Python-3.5+-brightgreen.svg?style=flat-square)](http://shields.io)
-[![Latest version](https://img.shields.io/badge/Latest_version-1.0.0-b44e88.svg?style=flat-square)](http://shields.io)
+[![Latest version](https://img.shields.io/badge/Latest_version-1.0.1-b44e88.svg?style=flat-square)](http://shields.io)
+<!--
 [![DOI](http://img.shields.io/badge/DOI-10.22002%20%2f%20D1.1209-blue.svg?style=flat-square)](https://data.caltech.edu/records/1209)
+-->
+
+🏁 Log of recent changes
+-----------------------
+
+_Version 1.0.1_: This is a significant bug-fix release.
+
+* Fixed serious bugs in creating `Researcher` objects from `Author` objects.
+* Fixed bugs in setting `current_organization` on `Person`, `Author` and `Researcher` objects
+* Fixed bugs setting `affiliations` on `Researcher` when derived from `Author` objects
+* Updated examples in the top-level [README](README.md) file
+* Started a [CHANGES](CHANGES.md) file
+
 
 Table of Contents
 -----------------
@@ -85,7 +99,7 @@ To run queries, you will need first to have an [account with Dimensions](https:/
 dimensions.login()
 ```
 
-When done this way, Sidewall will use the operating system's keyring/keychain functionality to get the user name and password.  If the information does not exist from a previous call to `dimensions.login()`, Sidewall will ask you for the user name and password interactively, and then store it in the keyring/keychain for next time.
+When done this way, Sidewall will use the operating system's keyring/keychain functionality (via [keyring](https://github.com/jaraco/keyring)) to get the user name and password.  If the information does not exist from a previous call to `dimensions.login()`, Sidewall will ask you for the user name and password interactively, and then store it in the keyring/keychain for next time.
 
 If asking the user for credentials interactively on the command line is unsuitable for the application you are writing, you can also supply a user name and password to the `login()` method as keyword arguments:
 
@@ -102,7 +116,7 @@ Sidewall defines a method, `query()`, which you can use to run a search in Dimen
 results = dimensions.query('search publications for "SBML" return publications')
 ```
 
-The form of the search query string that Sidewall can use is limited in ways described shortly.  The `query()` method returns a Python iterator object so that you iterate over the results, take the `len()`, and do other typical operations.
+The form of the search query string that Sidewall can use is limited in ways described shortly.  The `query()` method returns an object that acts as a Python [iterator](https://docs.python.org/3.5/tutorial/classes.html#iterators)&mdash;you can iterate over the results, use `len()`, and do other operations.
 
 The items returned by the iterator will be Sidewall objects of the kind discussed in the section below on [Data mappings]().  The specific classes of objects returned will correspond to the type of record expressed in the tail end of the query handed to `query()`.  For example, a query that ends in `return publications` will produce Sidewall `Publications` objects; a query that ends in `return researchers` will produce Sidewall `Researcher` objects; and so on.
 
@@ -322,7 +336,7 @@ All of the other classes (`Category`, `City`, `Country`, `State`) have the follo
 | name  | string |
 
 
-#### Unsupported Dimensions data types
+#### Currently unsupported Dimensions data types
 
 As of this version, Sidewall does not offer support for representing Dimensions policy and patent entities.  This is purely due to resource constraints and not due to an inherent limitation in the Sidewall design.  Future development could easily add new object classes to support these other data entities.
 
