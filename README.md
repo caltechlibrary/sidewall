@@ -49,7 +49,7 @@ Table of Contents
 ☀ Introduction
 -----------------------------
 
-[Dimensions](https://app.dimensions.ai) offers a networked API and search language (the [DSL](https://docs.dimensions.ai/dsl/language.html)).  However, interacting with the DSL currently requires sending a search string to the Dimensions server, then interpreting the JSON results and handling various issues such as iterating to obtain more than 1000 values (which requires the use of multiple queries), staying within API rate limits, and more.  _Sidewall_ ("**Si**mple **D**im**e**nsions **w**r**a**pper c**l**ient **l**ibrary") provides a higher-level interface for working more conveniently with the Dimensions DSL and network API.  Features of Sidewall include:
+[Dimensions](https://app.dimensions.ai) offers a networked API and search language (the [DSL](https://docs.dimensions.ai/dsl/language.html)).  However, interacting with the DSL via the network API currently requires sending a search string to the Dimensions server, then interpreting the JSON results and handling various issues such as iterating to obtain more than 1000 values (which requires the use of multiple queries), staying within API rate limits, and more.  _Sidewall_ ("**Si**mple **D**im**e**nsions **w**r**a**pper c**l**ient **l**ibrary") provides a higher-level interface for working more conveniently with the Dimensions DSL and network API.  Features of Sidewall include:
 
 * object classes for different Dimensions data entities
 * lazy object values filled in automatically behind the scenes
@@ -141,7 +141,7 @@ for pub in results:
     print('{}: {}'.format(pub.year, pub.doi))
 ```
 
-Sidewall will return an interator that will (if iterated) obtain all the results for a given Dimensions query, up to the limit of 50,000 imposed by the Dimensions API.  If you want to limit the number of results, set a value for the keyword argument `limit_results` to `query(...)`.  For example,
+Sidewall will return an iterator that will (if iterated) obtain all the results for a given Dimensions query, up to the limit of 50,000 imposed by the Dimensions API.  If you want to limit the number of results, set a value for the keyword argument `limit_results` to `query(...)`.  For example,
 
 ```python
 results = dimensions.query('search publications for "SBML" return publications', limit_results = 1000)
