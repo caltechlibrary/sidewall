@@ -1,6 +1,8 @@
 Sidewall<img width="24%" align="right" src=".graphics/tire-sidewall-wikipedia.svg">
 =============
 
+This package has been archived in September, 2024. Much of the functionality of sidewall is now available in the supported [dimcli](https://github.com/digital-science/dimcli) package. Sidewall doesn't support current Dimensions authentication options, and we don't have a good way to test it against the current Dimensions API.
+
 _Sidewall_ is a package for interacting with the [Dimensions](https://app.dimensions.ai) search API.  It provides object classes for Dimensions entities, fetches data incrementally, caches results, copes with rate limits, and more, to make working with Dimensions in Python more natural.  "Sidewall" is a loose acronym for _**Si**mple **D**im**e**nsions **w**r**a**pper c**l**ient **l**ibrary_.
 
 *Authors*:      [Michael Hucka](http://github.com/mhucka)<br>
